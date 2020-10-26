@@ -9,7 +9,7 @@ setup(
     #license='License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)',
     install_requires = [
         'numpy',
-        'scipy',
+        'scipy>=1.5',
         'pandas',
         'scikit-learn'
     ]
