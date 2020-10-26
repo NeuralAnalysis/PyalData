@@ -1,13 +1,13 @@
 import math
 import numpy as np
 import pandas as pd
-from scipy.stats import norm 
-from mat4py import loadmat, savemat
+from scipy.stats import norm
+import scipy.io
 from sklearn.decomposition import PCA
 from sklearn.decomposition import FactorAnalysis
 
 def mat2dataframes(path):
-    mat = loadmat(path)
+    mat = scipy.io.loadmat(path, simplify_cells=True)
     df = pd.DataFrame(mat['trial_data'])
 
     return df 
