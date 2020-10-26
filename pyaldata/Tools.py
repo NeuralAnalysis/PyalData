@@ -4,7 +4,7 @@ import pandas as pd
 from scipy.stats import norm
 from sklearn.decomposition import PCA
 from sklearn.decomposition import FactorAnalysis
-import utils
+from . import utils
 
 
 def SmoothSignal(trial_data, signals):
