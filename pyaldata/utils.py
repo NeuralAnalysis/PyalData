@@ -1,8 +1,11 @@
 import math
 import numpy as np
 import pandas as pd
+
 from scipy.stats import norm
 import scipy.io
+import scipy.signal as scs
+
 from sklearn.decomposition import PCA
 from sklearn.decomposition import FactorAnalysis
 
@@ -11,6 +14,7 @@ def mat2dataframe(path):
     df = pd.DataFrame(mat['trial_data'])
 
     return df 
+
 
 def getSig(trial_data, trial, signals):
     '''
@@ -30,35 +34,97 @@ def getSig(trial_data, trial, signals):
     return data 
 
 
-def smooth_data(data, dt, kernel_sd):
-    '''
-    Convolves spikes counts or firing rates with a Gaussian Kernel to smooth the responses. 
-    
-    Input: 
-    data: array of data( rows: time, columns: signals)
-    dt: size of the time steps in data in seconds 
-    kernel_sd: gaussian kernel standard deviation
-    '''
-    
-    data=np.asarray(data)
-    # Get number of channels and number of samples
-    (nbr_samples, nbr_chs) = np.shape(data)
-    #Preallocate return matrix
-    data_smooth = np.zeros((nbr_samples, nbr_chs))
-    # kernel half length is 3 times the SD 
-    kernel_hl = math.ceil(3*kernel_sd/(dt))
-    # create the kernel -- it will have length 2*kernel_hl+1
-    y = [x * dt for x in list(range(-kernel_hl, kernel_hl+1,1))]
-    kernel = norm.pdf(y, 0, kernel_sd)
-    # compute normalization factor
-    nm = np.transpose(np.convolve(kernel, np.ones( nbr_samples)))
-    
-    
-    for i in range(nbr_chs):
-        aux_smoothed_FR = np.convolve(np.transpose(kernel), data[:,i])/nm
-        data_smooth[:,i] = aux_smoothed_FR[kernel_hl:-(kernel_hl)]
-    
-    return data_smooth
+def norm_gauss_window(bin_length, std):
+    """
+    Gaussian window with its mass normalized to 1
+
+    Parameters
+    ----------
+    bin_length : float
+        binning length of the array we want to smooth in ms
+    std : float
+        standard deviation of the window
+        use hw_to_std to calculate std based from half-width
+
+    Returns
+    -------
+    win : 1D np.array
+        Gaussian kernel with
+            length: 5*std/bin_length
+            mass normalized to 1
+    """
+    win = scs.gaussian(int(5*std/bin_length), std/bin_length)
+    return win / np.sum(win)
+
+
+def hw_to_std(hw):
+    """
+    Convert half-width to standard deviation for a Gaussian window.
+    """
+    return hw / (2 * np.sqrt(2 * np.log(2)))
+
+
+def _smooth_1d(arr, win):
+    """
+    Smooth a 1D array by convolving it with a window
+
+    Parameters
+    ----------
+    arr : 1D array-like
+        time-series to smooth
+    win : 1D array-like
+        smoothing window to convolve with
+
+    Returns
+    -------
+    1D np.array of the same length as arr
+    """
+    return scs.convolve(arr, win, mode = "same")
+
+
+def smooth_data(mat, dt=None, std=None, hw=None, win=None):
+    """
+    Smooth a 1D array or every column of a 2D array
+
+    Parameters
+    ----------
+    mat : 1D or 2D np.array
+        vector or matrix whose columns to smooth
+        e.g. recorded spikes in a time x neuron array
+    dt : float
+        length of the timesteps in seconds
+    std : float (optional)
+        standard deviation of the smoothing window
+    hw : float (optional)
+        half-width of the smoothing window
+    win : 1D array-like (optional)
+        smoothing window to convolve with
+
+    Returns
+    -------
+    np.array of the same size as mat
+    """
+    assert only_one_is_not_None((win, hw, std))
+
+    if win is None:
+        assert dt is not None, "specify dt if not supplying window"
+
+        if std is None:
+            std = hw_to_std(hw)
+
+        win = norm_gauss_window(dt, std)
+
+    if mat.ndim == 1:
+        return _smooth_1d(mat, win)
+    elif mat.ndim == 2:
+        return np.column_stack([_smooth_1d(mat[:, i], win) for i in range(mat.shape[1])])
+    else:
+        raise ValueError("mat has to be a 1D or 2D array")
+
+
+def only_one_is_not_None(args):
+    return sum([arg is not None for arg in args]) == 1
+
 
 def concatTrials(trial_data, signal, indx_list):
     data=trial_data.loc[indx_list[0],signal]
