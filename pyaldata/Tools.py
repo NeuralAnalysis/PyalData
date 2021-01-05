@@ -15,7 +15,7 @@ def smooth_signals(trial_data, signals, std=None, hw=None):
     ----------
     trial_data: pd.DataFrame
         trial data
-    signals: list of strings or ints
+    signals: list of strings
         signals to be smoothed
     std : float (optional)
         standard deviation of the smoothing window
@@ -40,8 +40,9 @@ def smooth_signals(trial_data, signals, std=None, hw=None):
 
     win = utils.norm_gauss_window(bin_size, std)
 
-    # TODO make signals iterable if it isn't
-    
+    if isinstance(signals, str):
+        signals = [signals]
+
     for (i, trial) in trial_data_exit.iterrows():
         for sig in signals:
             trial_data_exit.at[i, sig] = utils.smooth_data(trial[sig], win=win)
