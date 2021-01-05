@@ -6,7 +6,7 @@ import scipy.io
 from sklearn.decomposition import PCA
 from sklearn.decomposition import FactorAnalysis
 
-def mat2dataframes(path):
+def mat2dataframe(path):
     mat = scipy.io.loadmat(path, simplify_cells=True)
     df = pd.DataFrame(mat['trial_data'])
 
