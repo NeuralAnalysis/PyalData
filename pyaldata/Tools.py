@@ -7,27 +7,47 @@ from sklearn.decomposition import FactorAnalysis
 from . import utils
 
 
-def SmoothSignal(trial_data, signals):
-    '''
-    Smooth signal
+def smooth_signals(trial_data, signals, std=None, hw=None):
+    """
+    Smooth signal(s)
     
-    Input: 
-    trial_data: DataFrame object with the data
-    signals: list of strings or index of the signals to be smoothed
+    Parameters
+    ----------
+    trial_data: pd.DataFrame
+        trial data
+    signals: list of strings or ints
+        signals to be smoothed
+    std : float (optional)
+        standard deviation of the smoothing window
+        default 0.05 seconds
+    hw : float (optional)
+        half-width of the smoothing window
     
-    Output:
-    trial_data: DataFrame objecti with the signals fields smoothed
-    '''
+    Returns
+    -------
+    trial_data: DataFrame with the appropriate fields smoothed
+    """
+    assert utils.only_one_is_not_None((std, hw))
+
     trial_data_exit = trial_data.copy()
-    bin_size = trial_data.loc[trial_data.index[0]]['bin_size']
-    width = 0.05
+    bin_size = trial_data.iloc[0]['bin_size']
+
+    if std is None:
+        if hw is not None:
+            std = utils.hw_to_std(hw)
+        else:
+            std = 0.05
+
+    win = utils.norm_gauss_window(bin_size, std)
+
+    # TODO make signals iterable if it isn't
     
-    for trial in trial_data.index:
+    for (i, trial) in trial_data_exit.iterrows():
         for sig in signals:
-            
-            data = smooth_data(getSig(trial_data, trial, sig),bin_size,width)
-            trial_data_exit.at[trial,sig]=np.array(data)
+            trial_data_exit.at[i, sig] = utils.smooth_data(trial[sig], win=win)
+
     return trial_data_exit
+
 
 def getTDidx(trial_data, col, v):
     '''
