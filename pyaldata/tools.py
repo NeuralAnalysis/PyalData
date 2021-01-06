@@ -7,6 +7,7 @@ from sklearn.decomposition import FactorAnalysis
 from . import utils
 
 
+@utils.copy_td
 def smooth_signals(trial_data, signals, std=None, hw=None):
     """
     Smooth signal(s)
@@ -29,7 +30,6 @@ def smooth_signals(trial_data, signals, std=None, hw=None):
     """
     assert utils.only_one_is_not_None((std, hw))
 
-    trial_data_exit = trial_data.copy()
     bin_size = trial_data.iloc[0]['bin_size']
 
     if std is None:
@@ -43,11 +43,11 @@ def smooth_signals(trial_data, signals, std=None, hw=None):
     if isinstance(signals, str):
         signals = [signals]
 
-    for (i, trial) in trial_data_exit.iterrows():
+    for (i, trial) in trial_data.iterrows():
         for sig in signals:
-            trial_data_exit.at[i, sig] = utils.smooth_data(trial[sig], win=win)
+            trial_data.at[i, sig] = utils.smooth_data(trial[sig], win=win)
 
-    return trial_data_exit
+    return trial_data
 
 
 def getTDidx(trial_data, col, v):
