@@ -98,6 +98,34 @@ def add_firing_rates(trial_data, method, std=None, hw=None, win=None):
     return trial_data
 
 
+@utils.copy_td
+def add_gradient(trial_data, signal, outfield=None):
+    """
+    Compute the gradient of signal in time
+
+    Parameters
+    ----------
+    trial_data : pd.DataFrame
+        data in trial_data format
+    signal : str
+        name of the field whose gradient we want to compute
+    outfield : str (optional)
+        if given, the name of the field in which to store the gradient
+        if not given, 'd' is prepended to the signal
+
+    Returns
+    -------
+    trial_data : pd.DataFrame
+        copy of trial_data with the gradient field added
+    """
+    if outfield is None:
+        outfield = 'd' + signal
+
+    trial_data[outfield] = [np.gradient(s, axis=0) for s in trial_data[signal]]
+
+    return trial_data
+
+
 def getTDidx(trial_data, col, v):
     '''
     Return tral_data with only the rows where selected column col holds the specific value v
