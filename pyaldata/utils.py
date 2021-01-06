@@ -141,6 +141,23 @@ def z_score(arr):
     return (arr - arr.mean(axis=0)) / arr.std(axis=0)
 
 
+def center(arr):
+    """
+    Center array by removing the mean across time
+
+    Parameters
+    ----------
+    arr : np.array
+        array to center
+        time on the first axis
+
+    Returns
+    -------
+    centered array with the same shape as arr
+    """
+    return arr - arr.mean(axis=0)
+
+
 def only_one_is_not_None(args):
     return sum([arg is not None for arg in args]) == 1
 
