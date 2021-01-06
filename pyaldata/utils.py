@@ -124,6 +124,23 @@ def smooth_data(mat, dt=None, std=None, hw=None, win=None):
         raise ValueError("mat has to be a 1D or 2D array")
 
 
+def z_score(arr):
+    """
+    z-score function by removing the mean and dividing by the standard deviation (across time)
+
+    Parameters
+    ----------
+    arr : np.array
+        array to z-score
+        time on the first axis
+
+    Returns
+    -------
+    z-scored array with the same shape as arr
+    """
+    return (arr - arr.mean(axis=0)) / arr.std(axis=0)
+
+
 def only_one_is_not_None(args):
     return sum([arg is not None for arg in args]) == 1
 
