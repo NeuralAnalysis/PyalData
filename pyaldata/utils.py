@@ -164,12 +164,28 @@ def remove_suffix(text, suffix):
     return text
 
 
-def concatTrials(trial_data, signal, indx_list):
-    data=trial_data.loc[indx_list[0],signal]
-    for i in indx_list[1:]:
-        data=np.concatenate((data,trial_data.loc[i,signal]))
+def concat_trials(trial_data, signal, trial_indices=None):
+    """
+    Concatenate signal from different trials in time
 
-    return data
+    Parameters
+    ----------
+    trial_data : pd.DataFrame
+        data in trial_data format
+    signal : str
+        name of the field to concatenate
+    trial_indices : array-like of ints
+        indices of the trials we want to get the signal from
+
+    Returns
+    -------
+    np.array of the signal in the selected trials
+    stacked on top of each other
+    """
+    if trial_indices is None:
+        return np.row_stack(trial_data[signal])
+    else:
+        return np.row_stack(trial_data.loc[trial_indices, signal])
 
 def dimReduce(data, params):
     """
