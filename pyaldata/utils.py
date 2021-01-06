@@ -9,6 +9,8 @@ import scipy.signal as scs
 from sklearn.decomposition import PCA
 from sklearn.decomposition import FactorAnalysis
 
+import functools
+
 def mat2dataframe(path):
     mat = scipy.io.loadmat(path, simplify_cells=True)
     df = pd.DataFrame(mat['trial_data'])
@@ -124,6 +126,18 @@ def smooth_data(mat, dt=None, std=None, hw=None, win=None):
 
 def only_one_is_not_None(args):
     return sum([arg is not None for arg in args]) == 1
+
+
+def copy_td(func):
+    """
+    Call copy on the first argument of the function and work on the copied value
+    """
+    @functools.wraps(func)
+    def wrapper(*args, **kwargs):
+        if not isinstance(args[0], pd.DataFrame):
+            raise ValueError(f"first argument of {func.__name__} has to be a pandas DataFrame")
+        return func(args[0].copy(), *args[1:], **kwargs)
+    return wrapper
 
 
 def concatTrials(trial_data, signal, indx_list):
