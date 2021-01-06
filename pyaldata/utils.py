@@ -140,6 +140,30 @@ def copy_td(func):
     return wrapper
 
 
+def remove_suffix(text, suffix):
+    """
+    Remove suffix from the end of text
+
+    Parameters
+    ----------
+    text : str
+        text from which to remove the suffix
+    suffix : str
+        suffix to remove from the end of text
+
+    Returns
+    -------
+    text : str
+        text with suffix removed if text ends with suffix
+        text untouched if text doesn't end with suffix
+    """
+    if text.endswith(suffix):
+        return text[:-len(suffix)]
+    else:
+        warnings.warn(f"{text} doesn't end with {suffix}. Didn't remove anything.")
+    return text
+
+
 def concatTrials(trial_data, signal, indx_list):
     data=trial_data.loc[indx_list[0],signal]
     for i in indx_list[1:]:
