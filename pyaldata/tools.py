@@ -50,6 +50,53 @@ def smooth_signals(trial_data, signals, std=None, hw=None):
     return trial_data
 
 
+@utils.copy_td
+def add_firing_rates(trial_data, method, std=None, hw=None, win=None):
+    """
+    Add firing rate fields calculated from spikes fields
+
+    Parameters
+    ----------
+    trial_data : pd.DataFrame
+        trial_data dataframe
+    method : str
+        'bin' or 'smooth'
+    std : float (optional)
+        standard deviation of the Gaussian window to smooth with
+        default 0.05 seconds
+    hw : float (optional)
+        half-width of the of the Gaussian window to smooth with
+    win : 1D array
+        smoothing window
+
+    Returns
+    -------
+    td : pd.DataFrame
+        trial_data with '_rates' fields added
+    """
+    spike_fields = [name for name in trial_data.columns.values if name.endswith("_spikes")]
+    rate_suffix = "_rates"
+    rate_fields = [utils.remove_suffix(name, "_spikes") + rate_suffix for name in spike_fields]
+
+    bin_size = trial_data.iloc[0]['bin_size']
+
+    if method == "smooth":
+        # NOTE creating the smoothing window here might be faster
+
+        for (spike_field, rate_field) in zip(spike_fields, rate_fields):
+            trial_data[rate_field] = [utils.smooth_data(spikes, bin_size, std, hw, win) / bin_size
+                                      for spikes in trial_data[spike_field]]
+
+    elif method == "bin":
+        assert all([x is None for x in [std, hw, win]]), "If binning is used, then std, hw, and win have no effect, so don't provide them."
+
+        for (spike_field, rate_field) in zip(spike_fields, rate_fields):
+            trial_data[rate_field] = [spikes / bin_size
+                                      for spikes in trial_data[spike_field]]
+
+    return trial_data
+
+
 def getTDidx(trial_data, col, v):
     '''
     Return tral_data with only the rows where selected column col holds the specific value v
