@@ -82,17 +82,18 @@ def add_firing_rates(trial_data, method, std=None, hw=None, win=None):
 
     if method == "smooth":
         # NOTE creating the smoothing window here might be faster
-
-        for (spike_field, rate_field) in zip(spike_fields, rate_fields):
-            trial_data[rate_field] = [utils.smooth_data(spikes, bin_size, std, hw, win) / bin_size
-                                      for spikes in trial_data[spike_field]]
+        def get_rate(spikes):
+            return utils.smooth_data(spikes, bin_size, std, hw, win) / bin_size
 
     elif method == "bin":
         assert all([x is None for x in [std, hw, win]]), "If binning is used, then std, hw, and win have no effect, so don't provide them."
 
-        for (spike_field, rate_field) in zip(spike_fields, rate_fields):
-            trial_data[rate_field] = [spikes / bin_size
-                                      for spikes in trial_data[spike_field]]
+        def get_rate(spikes):
+            return spikes / bin_size
+
+    # calculate rates for every spike field
+    for (spike_field, rate_field) in zip(spike_fields, rate_fields):
+        trial_data[rate_field] = [get_rate(spikes) for spikes in trial_data[spike_field]]
 
     return trial_data
 
