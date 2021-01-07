@@ -335,3 +335,26 @@ def z_score_signal(trial_data, signal, train_trials=None):
     trial_data[signal] = [(s - col_mean) / col_std for s in trial_data[signal]]
 
     return trial_data
+
+
+@utils.copy_td
+def sqrt_transform_signal(trial_data, signal):
+    """
+    square-root transform signal
+
+    Parameters
+    ----------
+    trial_data : pd.DataFrame
+        data in trial_data format
+    signal : str
+        column to transform
+        TODO extend to multiple columns
+
+    Returns
+    -------
+    trial_data : pd.DataFrame
+        data with the given field transformed
+    """
+    trial_data[signal] = [np.sqrt(s) for s in trial_data[signal]]
+
+    return trial_data
