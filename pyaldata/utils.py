@@ -187,6 +187,31 @@ def concat_trials(trial_data, signal, trial_indices=None):
     else:
         return np.row_stack(trial_data.loc[trial_indices, signal])
 
+
+def get_signals(trial_data, signals, trial_indices=None):
+    """
+    Extract multiple signals
+
+    Parameters
+    ----------
+    trial_data : pd.DataFrame
+        data in trial_data format
+    signals : list of str
+        name of the fields to concatenate
+    trial_indices : array-like of ints
+        indices of the trials we want to get the signals from
+
+    Returns
+    -------
+    np.array of the signals in the selected trials
+    merged and stacked on top of each other
+    """
+    if isinstance(signals, str):
+        signals = [signals]
+
+    return np.column_stack([concat_trials(trial_data, s, trial_indices) for s in signals])
+
+
 def dimReduce(data, params):
     """
     Function to compute the dimensionality reduction. For now handles PCA, PPCA and FA.
