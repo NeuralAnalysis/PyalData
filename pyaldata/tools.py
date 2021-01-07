@@ -382,7 +382,7 @@ def zero_normalize_signal(trial_data, signal, train_trials=None):
     """
     whole_signal = utils.concat_trials(trial_data, signal, train_trials)
     col_min = np.min(whole_signal, axis=0)
-    col_range = utils.get_col_range(whole_signal)
+    col_range = utils.get_range(whole_signal, axis=0)
 
     trial_data[signal] = [(s - col_min) / col_range for s in trial_data[signal]]
 
@@ -411,7 +411,7 @@ def center_normalize_signal(trial_data, signal, train_trials=None):
     """
     whole_signal = utils.concat_trials(trial_data, signal, train_trials)
     col_mean = np.mean(whole_signal, axis=0)
-    col_range = utils.get_col_range(whole_signal)
+    col_range = utils.get_range(whole_signal, axis=0)
 
     trial_data[signal] = [(s - col_mean) / col_range for s in trial_data[signal]]
 
