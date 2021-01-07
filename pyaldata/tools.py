@@ -457,3 +457,54 @@ def soft_normalize_signal(trial_data, signal, train_trials=None, alpha=5):
     trial_data[signal] = [s / norm_factor for s in trial_data[signal]]
 
     return trial_data
+
+
+@utils.copy_td
+def transform_signal(trial_data, signal, transformations, train_trials=None, **kwargs):
+    """
+    Apply transformation(s) to signal
+
+    Parameters
+    ----------
+    trial_data : pd.DataFrame
+        data in trial_data format
+    signal : str
+        column to normalize
+        TODO extend to multiple columns
+    transformations : str or list of str
+        transformations to apply
+        if it's a list of strings, the corresponding transformations are applied in the given order
+        Currently implemented:  'center',
+                                'center_normalize',
+                                'zero_normalize',
+                                'sqrt' or 'sqrt_transform',
+                                'z-score' or 'z_score',
+                                'zero_normalize',
+                                'soft_normalize'
+    train_trials : list of int
+        indices of the trials to consider for setting up the transformations
+    kwargs
+        keyword arguments to pass to the transformation functions
+
+    Returns
+    -------
+    trial_data : pd.DataFrame
+        data with the given field transformed
+    """
+    method_dict = {"center" : center_signal,
+                   "center_normalize" : center_normalize_signal,
+                   "zero_normalize" : zero_normalize_signal,
+                   "sqrt_transform" : sqrt_transform_signal,
+                   "sqrt" : sqrt_transform_signal,
+                   "z_score" : z_score_signal,
+                   "z-score" : z_score_signal,
+                   "zero_normalize" : zero_normalize_signal,
+                   "soft_normalize" : soft_normalize_signal}
+
+    if isinstance(transformations, str):
+        transformations = [transformations]
+
+    for trans in transformations:
+        trial_data = method_dict[trans](trial_data, signal, train_trials, **kwargs)
+
+    return trial_data
