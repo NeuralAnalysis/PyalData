@@ -305,3 +305,33 @@ def center_signal(trial_data, signal, train_trials=None):
     trial_data[signal] = [s - col_mean for s in trial_data[signal]]
 
     return trial_data
+
+
+@utils.copy_td
+def z_score_signal(trial_data, signal, train_trials=None):
+    """
+    z-score signal by removing the mean across time
+    and dividing by the standard deviation
+
+    Parameters
+    ----------
+    trial_data : pd.DataFrame
+        data in trial_data format
+    signal : str
+        column to z-score
+        TODO extend to multiple columns
+    train_trials : list of int
+        indices of the trials to consider when calculating the mean
+
+    Returns
+    -------
+    trial_data : pd.DataFrame
+        data with the given field z-scored
+    """
+    whole_signal = utils.concat_trials(trial_data, signal, train_trials)
+    col_mean = np.mean(whole_signal, axis=0)
+    col_std = np.std(whole_signal, axis=0)
+
+    trial_data[signal] = [(s - col_mean) / col_std for s in trial_data[signal]]
+
+    return trial_data
