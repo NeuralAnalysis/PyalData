@@ -321,7 +321,7 @@ def z_score_signal(trial_data, signal, train_trials=None):
         column to z-score
         TODO extend to multiple columns
     train_trials : list of int
-        indices of the trials to consider when calculating the mean
+        indices of the trials to consider when calculating the mean and std
 
     Returns
     -------
