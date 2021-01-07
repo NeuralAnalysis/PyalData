@@ -387,3 +387,32 @@ def zero_normalize_signal(trial_data, signal, train_trials=None):
     trial_data[signal] = [(s - col_min) / col_range for s in trial_data[signal]]
 
     return trial_data
+
+
+@utils.copy_td
+def center_normalize_signal(trial_data, signal, train_trials=None):
+    """
+    Center-normalize signal by removing the mean, then dividing by the range
+
+    Parameters
+    ----------
+    trial_data : pd.DataFrame
+        data in trial_data format
+    signal : str
+        column to normalize
+        TODO extend to multiple columns
+    train_trials : list of int
+        indices of the trials to consider when calculating the mean and range
+
+    Returns
+    -------
+    trial_data : pd.DataFrame
+        data with the given field normalized
+    """
+    whole_signal = utils.concat_trials(trial_data, signal, train_trials)
+    col_mean = np.mean(whole_signal, axis=0)
+    col_range = utils.get_col_range(whole_signal)
+
+    trial_data[signal] = [(s - col_mean) / col_range for s in trial_data[signal]]
+
+    return trial_data

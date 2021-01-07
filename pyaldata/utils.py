@@ -266,3 +266,21 @@ def dimReduce(data, params):
     
     return out_info
 
+
+
+def get_col_range(arr):
+    """
+    Difference between the highest and the lowest value
+    per columns
+
+    Parameters
+    ----------
+    arr : np.array
+        typically a time-varying signal
+
+    Returns
+    -------
+    np.array containing the ranges
+    along the first dimension of arr
+    """
+    return np.max(arr, axis=0) - np.min(arr, axis=0)
