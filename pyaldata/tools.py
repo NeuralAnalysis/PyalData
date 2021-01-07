@@ -416,3 +416,34 @@ def center_normalize_signal(trial_data, signal, train_trials=None):
     trial_data[signal] = [(s - col_mean) / col_range for s in trial_data[signal]]
 
     return trial_data
+
+
+@utils.copy_td
+def soft_normalize_signal(trial_data, signal, train_trials=None, alpha=5):
+    """
+    Soft normalize signal a la Churchland papers
+
+    Parameters
+    ----------
+    trial_data : pd.DataFrame
+        data in trial_data format
+    signal : str
+        column to normalize
+        TODO extend to multiple columns
+    train_trials : list of int
+        indices of the trials to consider when calculating the range
+    alpha : float, default 5
+        normalization factor = firing rate range + alpha
+
+    Returns
+    -------
+    trial_data : pd.DataFrame
+        data with the given field soft-normalized
+    """
+    whole_signal = utils.concat_trials(trial_data, signal, train_trials)
+
+    norm_factor = utils.get_range(whole_signal) + alpha
+
+    trial_data[signal] = [s / norm_factor for s in trial_data[signal]]
+
+    return trial_data
