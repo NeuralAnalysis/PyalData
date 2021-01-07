@@ -278,3 +278,27 @@ def binTD (trial_data, num_bins, isSpikes):
     
     return trial_data
 
+
+
+@utils.copy_td
+def merge_signals(trial_data, signals, out_fieldname):
+    """
+    Merge two signals under a new name
+
+    Parameters
+    ----------
+    trial_data : pd.DataFrame
+        data in trial_data format
+    signals : list of str
+        name of the fields we want to merge
+    out_fieldname : str
+        name of the field in which to store the output
+
+    Returns
+    -------
+    trial_data : pd.DataFrame
+        copy of trial_data with out_fieldname added
+    """
+    trial_data[out_fieldname] = [np.column_stack(row) for row in trial_data[signals].values]
+
+    return trial_data
