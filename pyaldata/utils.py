@@ -10,6 +10,7 @@ from sklearn.decomposition import PCA
 from sklearn.decomposition import FactorAnalysis
 
 import functools
+import warnings
 
 def mat2dataframe(path):
     mat = scipy.io.loadmat(path, simplify_cells=True)

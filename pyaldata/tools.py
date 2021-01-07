@@ -338,7 +338,7 @@ def z_score_signal(trial_data, signal, train_trials=None):
 
 
 @utils.copy_td
-def sqrt_transform_signal(trial_data, signal):
+def sqrt_transform_signal(trial_data, signal, train_trials=None):
     """
     square-root transform signal
 
@@ -349,12 +349,17 @@ def sqrt_transform_signal(trial_data, signal):
     signal : str
         column to transform
         TODO extend to multiple columns
+    train_trials : list of int
+        warning: not used, only here for consistency with other functions
+        indices of the trials to consider when calculating the mean and std
 
     Returns
     -------
     trial_data : pd.DataFrame
         data with the given field transformed
     """
+    if train_trials is not None:
+        utils.warnings.warn("train_trials is not used in sqrt_transform")
     trial_data[signal] = [np.sqrt(s) for s in trial_data[signal]]
 
     return trial_data
