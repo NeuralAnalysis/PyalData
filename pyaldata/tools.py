@@ -360,6 +360,11 @@ def sqrt_transform_signal(trial_data, signal, train_trials=None):
     """
     if train_trials is not None:
         utils.warnings.warn("train_trials is not used in sqrt_transform")
+
+    for s in trial_data[signal]:
+        if (s < 0).any():
+            raise ValueError("signal cannot contain negative values when square-root transforming")
+
     trial_data[signal] = [np.sqrt(s) for s in trial_data[signal]]
 
     return trial_data
