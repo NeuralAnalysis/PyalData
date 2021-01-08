@@ -278,3 +278,77 @@ def binTD (trial_data, num_bins, isSpikes):
     
     return trial_data
 
+
+@utils.copy_td
+def combine_time_bins(trial_data, n_bins, extra_time_fields=None):
+    """
+    Re-bin data by combining n_bins timesteps
+
+    Fields that are adjusted by default are:
+        - bin_size
+        - spikes
+        - rates
+        - idx
+        - vel, pos, acc
+    If you want to include others, specify extra_time_fields
+
+    Parameters
+    ----------
+    trial_data : pd.DataFrame
+        data in trial_data format
+    n_bins : int
+        number of bins to combine into one
+    extra_time_fields : list of str (optional)
+        extra time-varying signals to adjust
+
+    Returns
+    -------
+    adjusted trial_data copy
+    """
+    spike_fields = [col for col in trial_data.columns if col.endswith("spikes")]
+    rate_fields = [col for col in trial_data.columns if col.endswith("rates")]
+    kin_fields = ["vel", "pos", "acc"]
+    idx_fields = [col for col in trial_data.columns if col.startswith("idx")]
+
+    if len(trial_data.bin_size.unique()) != 1:
+        raise NotImplementedError("implementation assumes that every trial has the same bin_size")
+
+    trial_data["bin_size"] = n_bins * trial_data["bin_size"]
+
+    # adjust indices
+    for col in idx_fields:
+        trial_data[col] = [idx // n_bins for idx in trial_data[col]]
+
+
+    # rebin time-varying fields
+    def rebin_array(arr, red_fun):
+        T, N = arr.shape
+        T = (T // n_bins) * n_bins # throw away last bins
+
+        arr = arr[:T, :]
+        arr = arr.reshape(int(T / n_bins), n_bins, N)
+
+        return red_fun(arr, axis=1)
+
+    for col in spike_fields:
+        # if we think the column still holds spikes
+        if np.all([utils.all_integer(arr) for arr in trial_data[col]]):
+            f = np.sum
+        # if they are not integers anymore, e.g. because they've been smoothed
+        else:
+            f = np.mean
+
+        trial_data[col] = [rebin_array(arr, f) for arr in trial_data[col]]
+
+    for col in kin_fields + rate_fields:
+        trial_data[col] = [rebin_array(arr, np.mean) for arr in trial_data[col]]
+
+    if extra_time_fields is not None:
+        if isinstance(extra_time_fields, str):
+            extra_time_fields = [extra_time_fields]
+
+        for col in extra_time_fields:
+            trial_data[col] = [rebin_array(arr, np.mean) for arr in trial_data[col]]
+
+
+    return trial_data

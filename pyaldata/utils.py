@@ -232,3 +232,9 @@ def dimReduce(data, params):
     
     return out_info
 
+
+def all_integer(arr):
+    """
+    Check if all the values in arr are approximately integers
+    """
+    return np.all(np.isclose(arr, np.array(arr, dtype=int)))
