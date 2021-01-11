@@ -691,3 +691,37 @@ def rename_fields(trial_data, fields):
     trial_data = trial_data.rename(columns=fields)
     
     return trial_data
+
+
+@copy_td
+def copy_fields(trial_data, fields):
+    """
+    Rename field inside trial data
+    
+    
+    Parameters
+    ----------
+    trial_data: pd.DataFrame
+        trial_data datagrame
+        
+    fields: dict
+        dictionary where keys are fields to change and the keys are the new names 
+        ex: fields = {'old_name1':'new_name1', 'old_name2':'new_name2'}
+        
+    Returns
+    ----------
+    trial_data: pd.DataFrame
+        data with fields renamed
+    """
+    
+    #Check if all fields exist
+    for f in fields.keys():
+        if(not f in trial_data): 
+            raise ValueError(f"{f} field does not exist in trial data")
+            
+    for f in fields.keys():
+        trial_data[fields[f]] = trial_data[f]
+    
+    return trial_data
+
+    
