@@ -475,4 +475,23 @@ def slice_between_points(trial, start_point_name, end_point_name, before, after)
     """
 
     return slice(trial[start_point_name]-before, trial[end_point_name]+after+1)
->>>>>>> 63764c4 (Add basic functions for slicing time in trials)
+
+
+def extract_interval_from_signal(trial_data, signal, epoch_fun):
+    """
+    Extract an interval from a time-varying signal in the dataset
+
+    Parameters
+    ----------
+    trial_data : pd.DataFrame
+        data in trial_data format
+    signal : str
+        name of the signal to extract
+    epoch_fun : function
+        function that takes a trial and returns the epoch to extract
+
+    Returns
+    -------
+    list of the extracted np.arrays
+    """
+    return [trial[signal][epoch_fun(trial), :] for (i, trial) in trial_data.iterrows()]
