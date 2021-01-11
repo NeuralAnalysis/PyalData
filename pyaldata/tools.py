@@ -662,3 +662,32 @@ def dim_reduce(trial_data, model, signal, out_fieldname, train_trials=None, fit_
        return (apply_dim_reduce_model(trial_data, model, signal, out_fieldname), model)
    else:
        return apply_dim_reduce_model(trial_data, model, signal, out_fieldname)
+
+@copy_td
+def rename_fields(trial_data, fields):
+    """
+    Rename field inside trial data
+    
+    
+    Parameters
+    ----------
+    trial_data: pd.DataFrame
+        trial_data datagrame
+        
+    fields: dict
+        dictionary where keys are fields to change and the keys are the new names 
+        ex: fields = {'old_name1':'new_name1', 'old_name2':'new_name2'}
+        
+    Returns
+    ----------
+    trial_data: pd.DataFrame
+        data with fields renamed
+    """
+    
+    for f in fields.keys():
+        if(not f in trial_data): 
+            raise ValueError(f"{f} field does not exist in trial data")
+            
+    trial_data = trial_data.rename(columns=fields)
+    
+    return trial_data
