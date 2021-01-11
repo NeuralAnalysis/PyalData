@@ -293,7 +293,6 @@ def dimReduce(data, params):
     return out_info
 
 
-
 def get_range(arr, axis=None):
     """
     Difference between the highest and the lowest value
@@ -312,3 +311,44 @@ def get_range(arr, axis=None):
     if axis is not None, an np.array containing the ranges along the given axis
     """
     return np.max(arr, axis=axis) - np.min(arr, axis=axis)
+
+
+def get_time_varying_fields(trial_data, ref_field=None):
+    """
+    Identify time-varying fields in the dataset
+
+    Parameters
+    ----------
+    trial_data : pd.DataFrame
+        data in trial_data format
+    ref_field : str (optional)
+        time-varying field to use for identifying the rest
+        if not given, the first field that ends with "spikes" is used
+
+    Returns
+    -------
+    time_fields : list of str
+        list of fieldnames that store time-varying signals
+    """
+    if ref_field is None:
+        # look for a spikes field
+        ref_field = [col for col in trial_data.columns.values if col.endswith("spikes")][0]
+
+    # identify candidates based on the first trial
+    first_trial = trial_data.iloc[0]
+    T = first_trial[ref_field].shape[0]
+    time_fields = []
+    for col in first_trial.index:
+        try:
+            if first_trial[col].shape[0] == T:
+                time_fields.append(col)
+        except:
+            pass
+
+    # but check the rest of the trials, too
+    ref_lengths = np.array([arr.shape[0] for arr in trial_data[ref_field]])
+    for col in time_fields:
+        col_lengths = np.array([arr.shape[0] for arr in trial_data[col]])
+        assert np.all(col_lengths == ref_lengths), f"not all lengths in {col} match the reference {ref_field}"
+
+    return time_fields
