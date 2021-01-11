@@ -279,6 +279,31 @@ def binTD (trial_data, num_bins, isSpikes):
     return trial_data
 
 
+
+
+@utils.copy_td
+def add_norm(trial_data, signal):
+    """
+    Add the norm of the signal to the dataframe
+    Parameters
+    ----------
+    trial_data : pd.DataFrame
+        trial_data dataframe
+    signal : str
+        field to take the norm of
+
+    Returns
+    -------
+    td : pd.DataFrame
+        trial_data with '_norm' fields added
+    """
+    norm_field_name = signal + "_norm"
+
+    trial_data[norm_field_name] = [np.linalg.norm(s, axis=1) for s in trial_data[signal]]
+    
+    return trial_data
+    
+
 @utils.copy_td
 def center_signal(trial_data, signal, train_trials=None):
     """
@@ -312,6 +337,7 @@ def z_score_signal(trial_data, signal, train_trials=None):
     """
     z-score signal by removing the mean across time
     and dividing by the standard deviation
+
 
     Parameters
     ----------
