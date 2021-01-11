@@ -28,15 +28,15 @@ def smooth_signals(trial_data, signals, std=None, hw=None):
     -------
     trial_data: DataFrame with the appropriate fields smoothed
     """
-    assert utils.only_one_is_not_None((std, hw))
-
     bin_size = trial_data.iloc[0]['bin_size']
 
-    if std is None:
-        if hw is not None:
-            std = utils.hw_to_std(hw)
-        else:
+    if hw is None:
+        if std is None:
             std = 0.05
+    else:
+        assert (std is None), "only give hw or std"
+
+        std = utils.hw_to_std(hw)
 
     win = utils.norm_gauss_window(bin_size, std)
 
