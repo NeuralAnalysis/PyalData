@@ -282,6 +282,29 @@ def binTD (trial_data, num_bins, isSpikes):
 
 
 @utils.copy_td
+def merge_signals(trial_data, signals, out_fieldname):
+    """
+    Merge two signals under a new name
+    Parameters
+    ----------
+    trial_data : pd.DataFrame
+        data in trial_data format
+    signals : list of str
+        name of the fields we want to merge
+    out_fieldname : str
+        name of the field in which to store the output
+        
+    Returns
+    -------
+    trial_data : pd.DataFrame
+        copy of trial_data with out_fieldname added
+    """
+    trial_data[out_fieldname] = [np.column_stack(row) for row in trial_data[signals].values]
+    
+    return trial_data
+
+
+@utils.copy_td
 def add_norm(trial_data, signal):
     """
     Add the norm of the signal to the dataframe
@@ -490,6 +513,7 @@ def transform_signal(trial_data, signal, transformations, train_trials=None, **k
     """
     Apply transformation(s) to signal
 
+
     Parameters
     ----------
     trial_data : pd.DataFrame
@@ -512,6 +536,7 @@ def transform_signal(trial_data, signal, transformations, train_trials=None, **k
     kwargs
         keyword arguments to pass to the transformation functions
 
+
     Returns
     -------
     trial_data : pd.DataFrame
@@ -532,5 +557,6 @@ def transform_signal(trial_data, signal, transformations, train_trials=None, **k
 
     for trans in transformations:
         trial_data = method_dict[trans](trial_data, signal, train_trials, **kwargs)
+
 
     return trial_data
