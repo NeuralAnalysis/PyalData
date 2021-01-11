@@ -662,3 +662,35 @@ def dim_reduce(trial_data, model, signal, out_fieldname, train_trials=None, fit_
        return (apply_dim_reduce_model(trial_data, model, signal, out_fieldname), model)
    else:
        return apply_dim_reduce_model(trial_data, model, signal, out_fieldname)
+
+
+def trial_average(trial_data, condition):
+    """
+    Trial-average signals after grouping trials by some conditions
+
+    Parameters
+    ----------
+    trial_data : pd.DataFrame
+        data in trial_data format
+    condition : str, array-like trial_data.index, or function
+        if str, group trials by this field
+        if array-like, condition is a value that is assigned to each trial (e.g. df.target_id < 4),
+        and trials are grouped based on these values
+        if function, it should take a trial and return a value. the trials will be grouped based on these values
+
+    Returns
+    -------
+    pd.DataFrame with the fields averaged and the trial_id column dropped
+    """
+    time_fields = pyaldata.utils.get_time_varying_fields(trial_data)
+    for col in time_fields:
+        assert len(set([arr.shape for arr in trial_data[col]])) == 1, f"Trials should have the same time coordinates."
+
+    if callable(condition):
+        groups = [condition(trial) for (i, trial) in trial_data.iterrows()]
+    else:
+        groups = condition
+
+    return (pd.DataFrame.from_dict({a : b.mean() for (a, b) in trial_data.groupby(groups)},
+                                   orient="index")
+                        .drop("trial_id", axis="columns"))
