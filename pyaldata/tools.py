@@ -664,6 +664,30 @@ def dim_reduce(trial_data, model, signal, out_fieldname, train_trials=None, fit_
        return apply_dim_reduce_model(trial_data, model, signal, out_fieldname)
 
 
+def concat_TDs(frames, re_index=True):
+    """
+    Concatenate trial_data structures.
+    Supports if structs don't have the same fields, missing values are filled with nan.
+    
+    Parameters
+    ----------
+    frames: sequence of trial_data structs 
+        ex: frames=[td1, td2, td3]
+    re_index: bool, optional, default True
+        Sets the index of the struct from 0 to n-1 (n is total number of trials).
+        If False, the index from each original frame is maintained (careful: might lead to repeated indices). 
+
+    Returns
+    -------
+    Returns the concatenated dataframe. 
+        trial_data_total = df1 + df2 +...
+    """
+    if re_index:
+        return pd.concat(frames, ignore_index=True)
+    else:
+        return pd.concat(frames)
+
+      
 @utils.copy_td
 def rename_fields(trial_data, fields):
     """
