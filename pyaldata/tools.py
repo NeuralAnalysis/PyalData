@@ -81,9 +81,19 @@ def add_firing_rates(trial_data, method, std=None, hw=None, win=None):
     bin_size = trial_data.iloc[0]['bin_size']
 
     if method == "smooth":
-        # NOTE creating the smoothing window here might be faster
+        if win is None:
+            if hw is None:
+                if std is None:
+                    std = 0.05
+            else:
+                assert (std is None), "only give hw or std"
+
+                std = utils.hw_to_std(hw)
+
+            win = utils.norm_gauss_window(bin_size, std)
+
         def get_rate(spikes):
-            return utils.smooth_data(spikes, bin_size, std, hw, win) / bin_size
+            return utils.smooth_data(spikes, win=win) / bin_size
 
     elif method == "bin":
         assert all([x is None for x in [std, hw, win]]), "If binning is used, then std, hw, and win have no effect, so don't provide them."
