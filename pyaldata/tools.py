@@ -664,6 +664,62 @@ def dim_reduce(trial_data, model, signal, out_fieldname, train_trials=None, fit_
        return apply_dim_reduce_model(trial_data, model, signal, out_fieldname)
 
 
+@utils.copy_td
+def rename_fields(trial_data, fields):
+    """
+    Rename field inside trial data
+    
+    Parameters
+    ----------
+    trial_data: pd.DataFrame
+        trial_data dataframe
+    fields: dict
+        dictionary where keys are fields to change and the keys are the new names 
+        ex: fields = {'old_name1':'new_name1', 'old_name2':'new_name2'}
+        
+    Returns
+    ----------
+    trial_data: pd.DataFrame
+        data with fields renamed
+    """
+    
+    for f in fields.keys():
+        if (f not in trial_data): 
+            raise ValueError(f"{f} field does not exist in trial data")
+            
+    return trial_data.rename(columns=fields)
+
+
+@utils.copy_td
+def copy_fields(trial_data, fields):
+    """
+    Copy and rename inside trial data
+    
+    Parameters
+    ----------
+    trial_data: pd.DataFrame
+        trial_data dataframe
+    fields: dict
+        dictionary where keys are fields to copy and the keys are the new names 
+        ex: fields = {'old_name1':'new_name1', 'old_name2':'new_name2'}
+        
+    Returns
+    ----------
+    trial_data: pd.DataFrame
+        data with the copied fields with the new name
+    """
+    
+    #Check if all fields exist
+    for f in fields.keys():
+        if (f not in trial_data): 
+            raise ValueError(f"{f} field does not exist in trial data")
+            
+    for f in fields.keys():
+        trial_data[fields[f]] = trial_data[f]
+    
+    return trial_data
+
+
 def trial_average(trial_data, condition):
     """
     Trial-average signals after grouping trials by some conditions
