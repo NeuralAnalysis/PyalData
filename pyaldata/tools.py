@@ -297,6 +297,11 @@ def merge_signals(trial_data, signals, out_fieldname):
     trial_data : pd.DataFrame
         copy of trial_data with out_fieldname added
     """
+    if isinstance(signals, str):
+        raise ValueError("signals should be a list of fields")
+    if len(signals) == 1:
+        raise ValueError(f"This function is for merging multiple signals. Only got {signals[0]}")
+
     trial_data[out_fieldname] = [np.column_stack(row) for row in trial_data[signals].values]
     
     return trial_data
