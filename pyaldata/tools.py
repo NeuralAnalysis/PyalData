@@ -686,3 +686,91 @@ def concat_TDs(frames, re_index=True):
         return pd.concat(frames, ignore_index=True)
     else:
         return pd.concat(frames)
+
+      
+@utils.copy_td
+def rename_fields(trial_data, fields):
+    """
+    Rename field inside trial data
+    
+    Parameters
+    ----------
+    trial_data: pd.DataFrame
+        trial_data dataframe
+    fields: dict
+        dictionary where keys are fields to change and the keys are the new names 
+        ex: fields = {'old_name1':'new_name1', 'old_name2':'new_name2'}
+        
+    Returns
+    ----------
+    trial_data: pd.DataFrame
+        data with fields renamed
+    """
+    
+    for f in fields.keys():
+        if (f not in trial_data): 
+            raise ValueError(f"{f} field does not exist in trial data")
+            
+    return trial_data.rename(columns=fields)
+
+
+@utils.copy_td
+def copy_fields(trial_data, fields):
+    """
+    Copy and rename inside trial data
+    
+    Parameters
+    ----------
+    trial_data: pd.DataFrame
+        trial_data dataframe
+    fields: dict
+        dictionary where keys are fields to copy and the keys are the new names 
+        ex: fields = {'old_name1':'new_name1', 'old_name2':'new_name2'}
+        
+    Returns
+    ----------
+    trial_data: pd.DataFrame
+        data with the copied fields with the new name
+    """
+    
+    #Check if all fields exist
+    for f in fields.keys():
+        if (f not in trial_data): 
+            raise ValueError(f"{f} field does not exist in trial data")
+            
+    for f in fields.keys():
+        trial_data[fields[f]] = trial_data[f]
+    
+    return trial_data
+
+
+def trial_average(trial_data, condition):
+    """
+    Trial-average signals after grouping trials by some conditions
+
+    Parameters
+    ----------
+    trial_data : pd.DataFrame
+        data in trial_data format
+    condition : str, array-like trial_data.index, or function
+        if str, group trials by this field
+        if array-like, condition is a value that is assigned to each trial (e.g. df.target_id < 4),
+        and trials are grouped based on these values
+        if function, it should take a trial and return a value. the trials will be grouped based on these values
+
+    Returns
+    -------
+    pd.DataFrame with the fields averaged and the trial_id column dropped
+    """
+    time_fields = pyaldata.utils.get_time_varying_fields(trial_data)
+    for col in time_fields:
+        assert len(set([arr.shape for arr in trial_data[col]])) == 1, f"Trials should have the same time coordinates."
+
+    if callable(condition):
+        groups = [condition(trial) for (i, trial) in trial_data.iterrows()]
+    else:
+        groups = condition
+
+    return (pd.DataFrame.from_dict({a : b.mean() for (a, b) in trial_data.groupby(groups)},
+                                   orient="index")
+                        .drop("trial_id", axis="columns"))
