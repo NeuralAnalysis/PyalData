@@ -676,7 +676,7 @@ def cocat_TDs(frames, re_index=True):
         
     re_index: Boolean Default: True. 
         Sets the index of the struct from 0 to n-1 (n is total number of trials).
-        If False, the index from each original frame is maintained (careful: might lead to repeated indeces). 
+        If False, the index from each original frame is maintained (careful: might lead to repeated indices). 
         
         
     Returns
