@@ -673,7 +673,7 @@ def rename_fields(trial_data, fields):
     Parameters
     ----------
     trial_data: pd.DataFrame
-        trial_data datagrame
+        trial_data dataframe
         
     fields: dict
         dictionary where keys are fields to change and the keys are the new names 
@@ -702,16 +702,16 @@ def copy_fields(trial_data, fields):
     Parameters
     ----------
     trial_data: pd.DataFrame
-        trial_data datagrame
+        trial_data dataframe
         
     fields: dict
-        dictionary where keys are fields to change and the keys are the new names 
+        dictionary where keys are fields to copy and the keys are the new names 
         ex: fields = {'old_name1':'new_name1', 'old_name2':'new_name2'}
         
     Returns
     ----------
     trial_data: pd.DataFrame
-        data with fields renamed
+        data with the copied fields with the new name
     """
     
     #Check if all fields exist
