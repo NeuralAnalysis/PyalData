@@ -869,3 +869,34 @@ def trial_average(trial_data, condition):
     return (pd.DataFrame.from_dict({a : b.mean() for (a, b) in trial_data.groupby(groups)},
                                    orient="index")
                         .drop("trial_id", axis="columns"))
+
+
+@utils.copy_td
+def subtract_cross_condition_mean(trial_data, cond_idx=None):
+    """
+    Find mean across all trials for each time point and subtract it from each trial.
+
+    Parameters
+    ----------
+    trial_data : pd.DataFrame
+        data in trial_data format
+    cond_idx : array-like
+        indices of trials to use for mean
+
+    Returns
+    -------
+    trial_data with mean subtracted
+    """
+    if cond_idx is None:
+        cond_idx = trial_data.index
+
+    time_fields = utils.get_time_varying_fields(trial_data)
+    for col in time_fields:
+        assert len(set([arr.shape for arr in trial_data[col]])) == 1, f"Trials should have the same time coordinates in order to average."
+
+    for col in time_fields:
+        mean_act = np.mean(trial_data.loc[cond_idx, col], axis=0)
+        trial_data[col] = [arr - mean_act for arr in trial_data[col]]
+
+    return trial_data
+>>>>>>> edc0502 (Add subtract_cross_condition_mean function)
