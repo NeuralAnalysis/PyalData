@@ -663,7 +663,8 @@ def dim_reduce(trial_data, model, signal, out_fieldname, train_trials=None, fit_
    else:
        return apply_dim_reduce_model(trial_data, model, signal, out_fieldname)
 
-@copy_td
+
+@utils.copy_td
 def rename_fields(trial_data, fields):
     """
     Rename field inside trial data
@@ -685,18 +686,17 @@ def rename_fields(trial_data, fields):
     """
     
     for f in fields.keys():
-        if(not f in trial_data): 
+        if(f not in trial_data): 
             raise ValueError(f"{f} field does not exist in trial data")
             
-    trial_data = trial_data.rename(columns=fields)
     
-    return trial_data
+    return trial_data.rename(columns=fields)
 
 
-@copy_td
+@utils.copy_td
 def copy_fields(trial_data, fields):
     """
-    Rename field inside trial data
+    Copy and rename inside trial data
     
     
     Parameters
@@ -716,7 +716,7 @@ def copy_fields(trial_data, fields):
     
     #Check if all fields exist
     for f in fields.keys():
-        if(not f in trial_data): 
+        if(f not in trial_data): 
             raise ValueError(f"{f} field does not exist in trial data")
             
     for f in fields.keys():
@@ -724,4 +724,3 @@ def copy_fields(trial_data, fields):
     
     return trial_data
 
-    
