@@ -12,9 +12,29 @@ from sklearn.decomposition import FactorAnalysis
 import functools
 import warnings
 
-def mat2dataframe(path):
+def mat2dataframe(path, shift_idx_fields):
+    """
+    Load a trial_data .mat file and turn it into a pandas DataFrame
+
+    Parameters
+    ----------
+    path : str
+        path to the .mat file
+    shift_idx_fields : bool
+        whether to shift the idx fields
+        set to True if the data was exported from matlab
+        using its 1-based indexig
+
+    Returns
+    -------
+    df : pd.DataFrame
+        pandas dataframe replicating the trial_data format
+    """
     mat = scipy.io.loadmat(path, simplify_cells=True)
     df = pd.DataFrame(mat['trial_data'])
+
+    if shift_idx_fields:
+        df = backshift_idx_fields(df)
 
     return df 
 
@@ -293,6 +313,29 @@ def dimReduce(data, params):
     return out_info
 
 
+@copy_td
+def backshift_idx_fields(trial_data):
+    """
+    Adjust index fields from 1-based to 0-based indexing
+    
+    Parameters
+    ----------
+    trial_data : pd.DataFrame
+        data in trial_data format
+    
+    Returns
+    -------
+    trial_data with the 'idx_' fields adjusted
+    """
+    idx_fields = [col for col in trial_data.columns.values if col.startswith("idx")]
+
+    for col in idx_fields:
+        # using a list comprehension to still work if the idx field itself is an array
+        trial_data[col] = [idx - 1 for idx in trial_data[col]]
+
+    return trial_data
+
+
 def get_range(arr, axis=None):
     """
     Difference between the highest and the lowest value
@@ -317,10 +360,12 @@ def get_time_varying_fields(trial_data, ref_field=None):
     """
     Identify time-varying fields in the dataset
 
+
     Parameters
     ----------
     trial_data : pd.DataFrame
         data in trial_data format
+
     ref_field : str (optional)
         time-varying field to use for identifying the rest
         if not given, the first field that ends with "spikes" is used
