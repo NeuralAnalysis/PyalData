@@ -656,6 +656,8 @@ def transform_signal(trial_data, signal, transformations, train_trials=None, **k
     for trans in transformations:
         trial_data = method_dict[trans](trial_data, signal, train_trials, **kwargs)
 
+    return trial_data
+
 
 @utils.copy_td
 def restrict_to_interval(trial_data, start_point_name, end_point_name=None, before=0, after=0):
