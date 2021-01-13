@@ -6,6 +6,7 @@ from sklearn.decomposition import PCA
 from sklearn.decomposition import FactorAnalysis
 from . import utils
 
+import warnings
 
 @utils.copy_td
 def smooth_signals(trial_data, signals, std=None, hw=None):
@@ -400,6 +401,7 @@ def merge_signals(trial_data, signals, out_fieldname):
 def add_norm(trial_data, signal):
     """
     Add the norm of the signal to the dataframe
+
     Parameters
     ----------
     trial_data : pd.DataFrame
@@ -654,6 +656,57 @@ def transform_signal(trial_data, signal, transformations, train_trials=None, **k
     for trans in transformations:
         trial_data = method_dict[trans](trial_data, signal, train_trials, **kwargs)
 
+    return trial_data
+
+
+@utils.copy_td
+def restrict_to_interval(trial_data, start_point_name, end_point_name=None, before=0, after=0):
+    """
+    Restrict time-varying fields to an interval around a time point or between two time points
+
+    trial_data : pd.DataFrame
+        data in trial_data format
+    start_point_name : str
+        name of the time point around which the interval starts
+    end_point_name : str, optional
+        name of the time point around which the interval ends
+        if None, the interval is created around start_point_name
+    before : int, optional, default 0
+        number of time points to extract before the starting time point
+    after : int, optional, default 0
+        number of time points to extract after the ending time point
+
+    Returns
+    -------
+    data in trial_data format
+    """
+    idx_fields = [col for col in trial_data.columns.values if col.startswith("idx")]
+    time_fields = utils.get_time_varying_fields(trial_data)
+
+    if (end_point_name is None) and (before == 0) and (after == 0):
+        warnings.warn("Extracting only one time point instead of an interval.")
+
+    # extract given interval from the time-varying fields
+    if end_point_name is None:
+        epoch_fun = lambda trial: utils.slice_around_point(trial, start_point_name, before, after)
+    else:
+        epoch_fun = lambda trial: utils.slice_between_points(trial, start_point_name, end_point_name, before, after)
+
+    for col in time_fields:
+        trial_data[col] = utils.extract_interval_from_signal(trial_data, col, epoch_fun)
+
+    # adjust idx fields
+    new_time_lengths = [arr.shape[0] for arr in trial_data[time_fields[0]]]
+    zero_points = [p - before for p in trial_data[start_point_name]]
+
+    for col in idx_fields:
+        trial_data[col] = [idx - zero_point for (idx, zero_point) in zip(trial_data[col], zero_points)]
+
+        # set indices that are now invalid (i.e. not in the restricted interval) to nan
+        trial_data[col] = [np.nan
+                           if ((idx < 0) or (idx > new_T))
+                           else idx
+                           for (idx, new_T) in zip(trial_data[col], new_time_lengths)]
 
     return trial_data
 
@@ -950,3 +1003,4 @@ def remove_low_firing_neurons(trial_data, signal, threshold, divide_by_bin_size=
     trial_data[unit_guide] = [arr[mask, :] for arr in trial_data[unit_guide]]
 
     return trial_data
+
