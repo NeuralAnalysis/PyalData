@@ -28,15 +28,15 @@ def smooth_signals(trial_data, signals, std=None, hw=None):
     -------
     trial_data: DataFrame with the appropriate fields smoothed
     """
-    assert utils.only_one_is_not_None((std, hw))
-
     bin_size = trial_data.iloc[0]['bin_size']
 
-    if std is None:
-        if hw is not None:
-            std = utils.hw_to_std(hw)
-        else:
+    if hw is None:
+        if std is None:
             std = 0.05
+    else:
+        assert (std is None), "only give hw or std"
+
+        std = utils.hw_to_std(hw)
 
     win = utils.norm_gauss_window(bin_size, std)
 
@@ -81,9 +81,19 @@ def add_firing_rates(trial_data, method, std=None, hw=None, win=None):
     bin_size = trial_data.iloc[0]['bin_size']
 
     if method == "smooth":
-        # NOTE creating the smoothing window here might be faster
+        if win is None:
+            if hw is None:
+                if std is None:
+                    std = 0.05
+            else:
+                assert (std is None), "only give hw or std"
+
+                std = utils.hw_to_std(hw)
+
+            win = utils.norm_gauss_window(bin_size, std)
+
         def get_rate(spikes):
-            return utils.smooth_data(spikes, bin_size, std, hw, win) / bin_size
+            return utils.smooth_data(spikes, win=win) / bin_size
 
     elif method == "bin":
         assert all([x is None for x in [std, hw, win]]), "If binning is used, then std, hw, and win have no effect, so don't provide them."
@@ -278,3 +288,504 @@ def binTD (trial_data, num_bins, isSpikes):
     
     return trial_data
 
+
+@utils.copy_td
+def merge_signals(trial_data, signals, out_fieldname):
+    """
+    Merge two signals under a new name
+    Parameters
+    ----------
+    trial_data : pd.DataFrame
+        data in trial_data format
+    signals : list of str
+        name of the fields we want to merge
+    out_fieldname : str
+        name of the field in which to store the output
+        
+    Returns
+    -------
+    trial_data : pd.DataFrame
+        copy of trial_data with out_fieldname added
+    """
+    if isinstance(signals, str):
+        raise ValueError("signals should be a list of fields")
+    if len(signals) == 1:
+        raise ValueError(f"This function is for merging multiple signals. Only got {signals[0]}")
+
+    trial_data[out_fieldname] = [np.column_stack(row) for row in trial_data[signals].values]
+    
+    return trial_data
+
+
+@utils.copy_td
+def add_norm(trial_data, signal):
+    """
+    Add the norm of the signal to the dataframe
+    Parameters
+    ----------
+    trial_data : pd.DataFrame
+        trial_data dataframe
+    signal : str
+        field to take the norm of
+
+    Returns
+    -------
+    td : pd.DataFrame
+        trial_data with '_norm' fields added
+    """
+    norm_field_name = signal + "_norm"
+
+    trial_data[norm_field_name] = [np.linalg.norm(s, axis=1) for s in trial_data[signal]]
+    
+    return trial_data
+    
+
+@utils.copy_td
+def center_signal(trial_data, signal, train_trials=None):
+    """
+    Center signal by removing the mean across time
+
+
+    Parameters
+    ----------
+    trial_data : pd.DataFrame
+        data in trial_data format
+    signal : str
+        column to center
+        TODO extend to multiple columns
+    train_trials : list of int
+        indices of the trials to consider when calculating the mean
+
+    Returns
+    -------
+    trial_data : pd.DataFrame
+        data with the given field centered
+    """
+    whole_signal = utils.concat_trials(trial_data, signal, train_trials)
+    col_mean = np.mean(whole_signal, axis=0)
+
+    trial_data[signal] = [s - col_mean for s in trial_data[signal]]
+
+    return trial_data
+
+
+@utils.copy_td
+def z_score_signal(trial_data, signal, train_trials=None):
+    """
+    z-score signal by removing the mean across time
+    and dividing by the standard deviation
+
+
+    Parameters
+    ----------
+    trial_data : pd.DataFrame
+        data in trial_data format
+    signal : str
+        column to z-score
+        TODO extend to multiple columns
+    train_trials : list of int
+        indices of the trials to consider when calculating the mean and std
+
+    Returns
+    -------
+    trial_data : pd.DataFrame
+        data with the given field z-scored
+    """
+    whole_signal = utils.concat_trials(trial_data, signal, train_trials)
+    col_mean = np.mean(whole_signal, axis=0)
+    col_std = np.std(whole_signal, axis=0)
+
+    trial_data[signal] = [(s - col_mean) / col_std for s in trial_data[signal]]
+
+    return trial_data
+
+
+@utils.copy_td
+def sqrt_transform_signal(trial_data, signal, train_trials=None):
+    """
+    square-root transform signal
+
+    Parameters
+    ----------
+    trial_data : pd.DataFrame
+        data in trial_data format
+    signal : str
+        column to transform
+        TODO extend to multiple columns
+    train_trials : list of int
+        warning: not used, only here for consistency with other functions
+        indices of the trials to consider when calculating the mean and std
+
+    Returns
+    -------
+    trial_data : pd.DataFrame
+        data with the given field transformed
+    """
+    if train_trials is not None:
+        utils.warnings.warn("train_trials is not used in sqrt_transform")
+
+    for s in trial_data[signal]:
+        if (s < 0).any():
+            raise ValueError("signal cannot contain negative values when square-root transforming")
+
+    trial_data[signal] = [np.sqrt(s) for s in trial_data[signal]]
+
+
+    return trial_data
+
+
+@utils.copy_td
+def zero_normalize_signal(trial_data, signal, train_trials=None):
+    """
+    Zero-normalize signal to 0-1 by removing the minimum, then dividing by the range
+
+
+    Parameters
+    ----------
+    trial_data : pd.DataFrame
+        data in trial_data format
+    signal : str
+        column to normalize
+        TODO extend to multiple columns
+    train_trials : list of int
+        indices of the trials to consider when calculating the minimum and range
+
+    Returns
+    -------
+    trial_data : pd.DataFrame
+        data with the given field normalized
+    """
+    whole_signal = utils.concat_trials(trial_data, signal, train_trials)
+    col_min = np.min(whole_signal, axis=0)
+    col_range = utils.get_range(whole_signal, axis=0)
+
+    trial_data[signal] = [(s - col_min) / col_range for s in trial_data[signal]]
+
+    return trial_data
+
+
+@utils.copy_td
+def center_normalize_signal(trial_data, signal, train_trials=None):
+    """
+    Center-normalize signal by removing the mean, then dividing by the range
+
+    Parameters
+    ----------
+    trial_data : pd.DataFrame
+        data in trial_data format
+    signal : str
+        column to normalize
+        TODO extend to multiple columns
+    train_trials : list of int
+        indices of the trials to consider when calculating the mean and range
+
+    Returns
+    -------
+    trial_data : pd.DataFrame
+        data with the given field normalized
+    """
+    whole_signal = utils.concat_trials(trial_data, signal, train_trials)
+    col_mean = np.mean(whole_signal, axis=0)
+    col_range = utils.get_range(whole_signal, axis=0)
+
+    trial_data[signal] = [(s - col_mean) / col_range for s in trial_data[signal]]
+
+    return trial_data
+
+
+@utils.copy_td
+def soft_normalize_signal(trial_data, signal, train_trials=None, alpha=5):
+    """
+    Soft normalize signal a la Churchland papers
+
+    Parameters
+    ----------
+    trial_data : pd.DataFrame
+        data in trial_data format
+    signal : str
+        column to normalize
+        TODO extend to multiple columns
+    train_trials : list of int
+        indices of the trials to consider when calculating the range
+    alpha : float, default 5
+        normalization factor = firing rate range + alpha
+
+    Returns
+    -------
+    trial_data : pd.DataFrame
+        data with the given field soft-normalized
+    """
+    whole_signal = utils.concat_trials(trial_data, signal, train_trials)
+
+    norm_factor = utils.get_range(whole_signal) + alpha
+
+    trial_data[signal] = [s / norm_factor for s in trial_data[signal]]
+
+    return trial_data
+
+
+@utils.copy_td
+def transform_signal(trial_data, signal, transformations, train_trials=None, **kwargs):
+    """
+    Apply transformation(s) to signal
+
+
+    Parameters
+    ----------
+    trial_data : pd.DataFrame
+        data in trial_data format
+    signal : str
+        column to normalize
+        TODO extend to multiple columns
+    transformations : str or list of str
+        transformations to apply
+        if it's a list of strings, the corresponding transformations are applied in the given order
+        Currently implemented:  'center',
+                                'center_normalize',
+                                'zero_normalize',
+                                'sqrt' or 'sqrt_transform',
+                                'z-score' or 'z_score',
+                                'zero_normalize',
+                                'soft_normalize'
+    train_trials : list of int
+        indices of the trials to consider for setting up the transformations
+    kwargs
+        keyword arguments to pass to the transformation functions
+
+
+    Returns
+    -------
+    trial_data : pd.DataFrame
+        data with the given field transformed
+    """
+    method_dict = {"center" : center_signal,
+                   "center_normalize" : center_normalize_signal,
+                   "zero_normalize" : zero_normalize_signal,
+                   "sqrt_transform" : sqrt_transform_signal,
+                   "sqrt" : sqrt_transform_signal,
+                   "z_score" : z_score_signal,
+                   "z-score" : z_score_signal,
+                   "zero_normalize" : zero_normalize_signal,
+                   "soft_normalize" : soft_normalize_signal}
+
+    if isinstance(transformations, str):
+        transformations = [transformations]
+
+    for trans in transformations:
+        trial_data = method_dict[trans](trial_data, signal, train_trials, **kwargs)
+
+
+    return trial_data
+
+
+def fit_dim_reduce_model(trial_data, model, signal, train_trials=None, fit_kwargs=None):
+     """
+     Fit a dimensionality reduction model to train_trials
+
+     Parameters
+     ----------
+     trial_data : pd.DataFrame
+         data in trial_data format
+     model : dimensionality reduction model
+         model to fit
+         has to implement a .fit (and .transform) method
+     signal : str
+         signal to fit to
+     train_trials : list of ints (optional)
+         trials to fit the model to
+     fit_kwargs : dict (optional)
+         parameters to pass to model.fit
+
+     Returns
+     -------
+     fitted model
+
+     Example
+     -------
+         from sklearn.decomposition import PCA
+         pca_dims = -5
+         pca = fit_dim_reduce_model(trial_data, PCA(pca_dims), 'M1_rates')
+     """
+     if fit_kwargs is None:
+         fit_kwargs = {}
+
+     model.fit(utils.concat_trials(trial_data, signal, train_trials),
+               **fit_kwargs)
+
+     return model
+
+
+@utils.copy_td
+def apply_dim_reduce_model(trial_data, model, signal, out_fieldname):
+   """
+   Apply a fitted dimensionality reduction model to all trials
+
+   Parameters
+   ----------
+   trial_data : pd.DataFrame
+       data in trial_data format
+   model : dimensionality reduction model
+       fitted model
+       has to implement a .transform method
+   signal : str
+       signal to apply to
+   out_fieldname : str
+       name of the field in which to store the transformed values
+
+   Returns
+   -------
+   trial_data with out_fieldname added
+   """
+   trial_data[out_fieldname] = [model.transform(s) for s in trial_data[signal]]
+
+   return trial_data
+
+
+@utils.copy_td
+def dim_reduce(trial_data, model, signal, out_fieldname, train_trials=None, fit_kwargs=None, return_model=False):
+   """
+   Fit dimensionality reduction model and apply it to all trials
+
+   Parameters
+   ----------
+   trial_data : pd.DataFrame
+       data in trial_data format
+   model : dimensionality reduction model
+       model to fit
+       has to implement a .fit and .transform method
+   signal : str
+       signal to fit and transform
+   out_fieldname : str
+       name of the field in which to store the transformed values
+   train_trials : list of ints (optional)
+       trials to fit the model to
+   fit_kwargs : dict (optional)
+       parameters to pass to model.fit
+   return_model : bool (optional, default False)
+       return the fitted model along with the data
+
+   Returns
+   -------
+   if return_model is False
+       trial_data with the projections added in out_fieldname
+   if return_model is True
+       (trial_data, model)
+   """
+   model = fit_dim_reduce_model(trial_data, model, signal, train_trials, fit_kwargs)
+
+   if return_model:
+       return (apply_dim_reduce_model(trial_data, model, signal, out_fieldname), model)
+   else:
+       return apply_dim_reduce_model(trial_data, model, signal, out_fieldname)
+
+
+def concat_TDs(frames, re_index=True):
+    """
+    Concatenate trial_data structures.
+    Supports if structs don't have the same fields, missing values are filled with nan.
+    
+    Parameters
+    ----------
+    frames: sequence of trial_data structs 
+        ex: frames=[td1, td2, td3]
+    re_index: bool, optional, default True
+        Sets the index of the struct from 0 to n-1 (n is total number of trials).
+        If False, the index from each original frame is maintained (careful: might lead to repeated indices). 
+
+    Returns
+    -------
+    Returns the concatenated dataframe. 
+        trial_data_total = df1 + df2 +...
+    """
+    if re_index:
+        return pd.concat(frames, ignore_index=True)
+    else:
+        return pd.concat(frames)
+
+      
+@utils.copy_td
+def rename_fields(trial_data, fields):
+    """
+    Rename field inside trial data
+    
+    Parameters
+    ----------
+    trial_data: pd.DataFrame
+        trial_data dataframe
+    fields: dict
+        dictionary where keys are fields to change and the keys are the new names 
+        ex: fields = {'old_name1':'new_name1', 'old_name2':'new_name2'}
+        
+    Returns
+    ----------
+    trial_data: pd.DataFrame
+        data with fields renamed
+    """
+    
+    for f in fields.keys():
+        if (f not in trial_data): 
+            raise ValueError(f"{f} field does not exist in trial data")
+            
+    return trial_data.rename(columns=fields)
+
+
+@utils.copy_td
+def copy_fields(trial_data, fields):
+    """
+    Copy and rename inside trial data
+    
+    Parameters
+    ----------
+    trial_data: pd.DataFrame
+        trial_data dataframe
+    fields: dict
+        dictionary where keys are fields to copy and the keys are the new names 
+        ex: fields = {'old_name1':'new_name1', 'old_name2':'new_name2'}
+        
+    Returns
+    ----------
+    trial_data: pd.DataFrame
+        data with the copied fields with the new name
+    """
+    
+    #Check if all fields exist
+    for f in fields.keys():
+        if (f not in trial_data): 
+            raise ValueError(f"{f} field does not exist in trial data")
+            
+    for f in fields.keys():
+        trial_data[fields[f]] = trial_data[f]
+    
+    return trial_data
+
+
+def trial_average(trial_data, condition):
+    """
+    Trial-average signals after grouping trials by some conditions
+
+    Parameters
+    ----------
+    trial_data : pd.DataFrame
+        data in trial_data format
+    condition : str, array-like trial_data.index, or function
+        if str, group trials by this field
+        if array-like, condition is a value that is assigned to each trial (e.g. df.target_id < 4),
+        and trials are grouped based on these values
+        if function, it should take a trial and return a value. the trials will be grouped based on these values
+
+    Returns
+    -------
+    pd.DataFrame with the fields averaged and the trial_id column dropped
+    """
+    time_fields = pyaldata.utils.get_time_varying_fields(trial_data)
+    for col in time_fields:
+        assert len(set([arr.shape for arr in trial_data[col]])) == 1, f"Trials should have the same time coordinates."
+
+    if callable(condition):
+        groups = [condition(trial) for (i, trial) in trial_data.iterrows()]
+    else:
+        groups = condition
+
+    return (pd.DataFrame.from_dict({a : b.mean() for (a, b) in trial_data.groupby(groups)},
+                                   orient="index")
+                        .drop("trial_id", axis="columns"))
