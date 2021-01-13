@@ -923,6 +923,28 @@ def trial_average(trial_data, condition):
                         .drop("trial_id", axis="columns"))
 
 
+@utils.copy_td
+def only_successful_trials(trial_data, reset_index=True):
+    """
+    Keep only successful trials
+
+    Parameters
+    ----------
+    trial_data : pd.DataFrame
+        data in trial_data format
+    reset_index : bool, optional, default True
+        whether to reset the dataframe index
+
+    Returns
+    -------
+    data with unsuccessful trials dropped
+    """
+    if reset_index:
+        return trial_data.query("result == 'R'").reset_index(drop=True)
+    else:
+        return trial_data.query("result == 'R'")
+
+
 def get_average_firing_rates(trial_data, signal, divide_by_bin_size=None):
     """
     Calculate average firing rates of neurons across all trials
@@ -1003,3 +1025,25 @@ def remove_low_firing_neurons(trial_data, signal, threshold, divide_by_bin_size=
     trial_data[unit_guide] = [arr[mask, :] for arr in trial_data[unit_guide]]
 
     return trial_data
+
+
+@utils.copy_td
+def only_failed_trials(trial_data, reset_index=True):
+    """
+    Keep only failed/unsuccessful trials
+
+    Parameters
+    ----------
+    trial_data : pd.DataFrame
+        data in trial_data format
+    reset_index : bool, optional, default True
+        whether to reset the dataframe index
+
+    Returns
+    -------
+    data with successful trials dropped
+    """
+    if reset_index:
+        return trial_data.query("result != 'R'").reset_index(drop=True)
+    else:
+        return trial_data.query("result != 'R'")
