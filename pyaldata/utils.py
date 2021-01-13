@@ -313,6 +313,13 @@ def dimReduce(data, params):
     return out_info
 
 
+def all_integer(arr):
+    """
+    Check if all the values in arr are approximately integers
+    """
+    return np.all(np.isclose(arr, np.array(arr, dtype=int)))
+
+  
 @copy_td
 def backshift_idx_fields(trial_data):
     """
@@ -397,3 +404,4 @@ def get_time_varying_fields(trial_data, ref_field=None):
         assert np.all(col_lengths == ref_lengths), f"not all lengths in {col} match the reference {ref_field}"
 
     return time_fields
+
