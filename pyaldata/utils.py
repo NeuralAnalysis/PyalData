@@ -12,14 +12,18 @@ from sklearn.decomposition import FactorAnalysis
 import functools
 import warnings
 
-def mat2dataframe(path, shift_idx_fields):
+
+def mat2dataframe(path, shift_idx_fields, td_name=None):
     """
     Load a trial_data .mat file and turn it into a pandas DataFrame
 
     Parameters
     ----------
     path : str
-        path to the .mat file
+        path to the .mat file to load
+        "Can also pass open file-like object."
+    td_name : str, optional
+        name of the variable under which the data was saved
     shift_idx_fields : bool
         whether to shift the idx fields
         set to True if the data was exported from matlab
@@ -29,9 +33,22 @@ def mat2dataframe(path, shift_idx_fields):
     -------
     df : pd.DataFrame
         pandas dataframe replicating the trial_data format
+        each row is a trial
     """
     mat = scipy.io.loadmat(path, simplify_cells=True)
-    df = pd.DataFrame(mat['trial_data'])
+    real_keys = [k for k in mat.keys() if not (k.startswith("__") and k.endswith("__"))]
+
+    if td_name is None:
+        if len(real_keys) == 0:
+            raise ValueError("Could not find dataset name. Please specify td_name.")
+        elif len(real_keys) > 1:
+            raise ValueError("More than one datasets found. Please specify td_name.")
+
+        assert len(real_keys) == 1
+
+        td_name = real_keys[0]
+
+    df = pd.DataFrame(mat[td_name])
 
     if shift_idx_fields:
         df = backshift_idx_fields(df)
