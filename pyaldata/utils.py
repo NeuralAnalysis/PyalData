@@ -251,7 +251,7 @@ def get_signals(trial_data, signals, trial_indices=None):
     ----------
     trial_data : pd.DataFrame
         data in trial_data format
-    signals : list of str
+    signals : str or list of str
         name of the fields to concatenate
     trial_indices : array-like of ints
         indices of the trials we want to get the signals from
@@ -266,6 +266,37 @@ def get_signals(trial_data, signals, trial_indices=None):
 
     return np.column_stack([concat_trials(trial_data, s, trial_indices) for s in signals])
 
+
+def get_sig_by_trial(trial_data, signals, trial_indices=None):
+    """
+    Extract multiple signals and stack trials along a trial dimension
+    resulting in a T x N x n_trials tensor.
+    Note that each trial and signal has to have the same length (T).
+
+    Parameters
+    ----------
+    trial_data : pd.DataFrame
+        data in trial_data format
+    signals : str or list of str
+        name of the fields to extract
+        if multiple, signals are merged
+    trial_indices : array-like of ints
+        indices of the trials we want to get the signals from
+
+    Returns
+    -------
+    np.array of the signals in the selected trials
+    merged and stacked along a new trial dimension
+    shape T x N x n_trials
+    """
+    if isinstance(signals, str):
+        signals = [signals]
+
+    if trial_indices is None:
+        trial_indices = trial_data.index
+
+    return np.stack([np.column_stack(row) for row in trial_data.loc[trial_indices, signals].values],
+                    axis=-1)
 
 def dimReduce(data, params):
     """

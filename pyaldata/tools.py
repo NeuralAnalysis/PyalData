@@ -880,7 +880,6 @@ def copy_fields(trial_data, fields):
     trial_data: pd.DataFrame
         data with the copied fields with the new name
     """
-    
     #Check if all fields exist
     for f in fields.keys():
         if (f not in trial_data): 
@@ -924,11 +923,12 @@ def trial_average(trial_data, condition):
                         .drop("trial_id", axis="columns"))
 
 
+
 @utils.copy_td
 def subtract_cross_condition_mean(trial_data, cond_idx=None):
     """
     Find mean across all trials for each time point and subtract it from each trial.
-
+    
     Parameters
     ----------
     trial_data : pd.DataFrame
@@ -950,6 +950,89 @@ def subtract_cross_condition_mean(trial_data, cond_idx=None):
     for col in time_fields:
         mean_act = np.mean(trial_data.loc[cond_idx, col], axis=0)
         trial_data[col] = [arr - mean_act for arr in trial_data[col]]
+    return trial_data
+        
+
+def get_average_firing_rates(trial_data, signal, divide_by_bin_size=None):
+    """
+    Calculate average firing rates of neurons across all trials
+
+    Parameters
+    ----------
+    trial_data : pd.DataFrame
+        data in trial_data format
+    signal : str
+        signal from which to calculate the average firing rates
+        ideally spikes or rates
+    divide_by_bin_size : bool, optional
+        whether to divide by the bin size when calculating the firing rates
+
+    Returns
+    -------
+    np.array with the average firing rates
+    shape (N, ) where N is the number of neurons in signal
+    """
+    assert len(set(trial_data.bin_size)) == 1, "Function assumes that every trial has the same bin size."
+
+    if signal.endswith("spikes"):
+        if divide_by_bin_size is None:
+            utils.warnings.warn("Assuming spikes are actually spikes and dividing by bin size.")
+            divide_by_bin_size = True
+    elif signal.endswith("rates"):
+        if divide_by_bin_size is None:
+            utils.warnings.warn("Assuming rates are already in Hz and don't have to divide by bin size.")
+            divide_by_bin_size = False
+    else:
+        if divide_by_bin_size is None:
+            raise ValueError(f"Please specify divide_by_bin_size. Could not determine it automatically.")
+
+    if divide_by_bin_size:
+        return np.mean(utils.concat_trials(trial_data, signal), axis=0) / trial_data.bin_size[0]
+    else:
+        return np.mean(utils.concat_trials(trial_data, signal), axis=0)
+
+
+@utils.copy_td
+def remove_low_firing_neurons(trial_data, signal, threshold, divide_by_bin_size=None):
+    """
+    Remove neurons from signal whose average firing rate
+    across all trials is lower than a threshold
+
+
+    Parameters
+    ----------
+    trial_data : pd.DataFrame
+        data in trial_data format
+    signal : str
+        signal from which to calculate the average firing rates
+        ideally spikes or rates
+    threshold : float
+        threshold in Hz
+    divide_by_bin_size : bool, optional
+        whether to divide by the bin size when calculating the firing rates
+
+    Returns
+    -------
+    trial_data with the low-firing neurons removed from the
+    signal and the corresponding unit_guide
+    """
+    av_rates = get_average_firing_rates(trial_data, signal, divide_by_bin_size)
+    mask = av_rates >= threshold
+
+    trial_data[signal] = [arr[:, mask] for arr in trial_data[signal]]
+
+    if signal.endswith("_spikes"):
+        suffix = "_spikes"
+    elif signal.endswith("_rates"):
+        suffix = "_rates"
+    else:
+        utils.warnings.warn("Could not determine which unit_guide to modify.")
+
+    area_name = utils.remove_suffix(signal, suffix)
+    unit_guide = area_name + "_unit_guide"
+
+    trial_data[unit_guide] = [arr[mask, :] for arr in trial_data[unit_guide]]
+
 
     return trial_data
 
