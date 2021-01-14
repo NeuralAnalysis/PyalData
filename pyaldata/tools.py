@@ -1003,4 +1003,3 @@ def remove_low_firing_neurons(trial_data, signal, threshold, divide_by_bin_size=
     trial_data[unit_guide] = [arr[mask, :] for arr in trial_data[unit_guide]]
 
     return trial_data
-
