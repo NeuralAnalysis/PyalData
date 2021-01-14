@@ -1035,3 +1035,52 @@ def remove_low_firing_neurons(trial_data, signal, threshold, divide_by_bin_size=
 
 
     return trial_data
+
+
+@utils.copy_td
+def select_trials(trial_data, query, reset_index=True):
+    """
+    Select trials based on some criteria
+
+    Parameters
+    ----------
+    trial_data : pd.DataFrame
+        data in trial_data format
+    query : str, function, array-like
+        if array-like, the dataframe is indexed with this
+            can be either a list of indices or a mask
+        if str, it should express a condition
+            it is passed to trial_data.query
+        if function/callable, it should take a trial as argument
+            and return True for trials you want to keep
+    reset_index : bool, optional, default True
+        whether to reset the dataframe index to [0,1,2,...]
+        or keep the original indices of the kept trials
+
+    Returns
+    -------
+    trial_data with only the selected trials
+
+    Examples
+    --------
+    succ_td = select_trials(td, "result == 'R'")
+
+    succ_mask = (td.result == 'R')
+    succ_td = select_trials(td, succ_mask)
+
+    train_idx = np.arange(10)
+    train_trials = select_trials(td, train_idx)
+
+    right_trials = select_trials(td, lambda trial: np.cos(trial.target_direction) > np.finfo(float).eps)
+    """
+    if isinstance(query, str):
+        trials_to_keep = trial_data.query(query).index
+    elif callable(query):
+        trials_to_keep = [query(trial) for (i, trial) in trial_data.iterrows()]
+    else:
+        trials_to_keep = query
+
+    if reset_index:
+        return trial_data.loc[trials_to_keep, :].reset_index(drop=True)
+    else:
+        return trial_data.loc[trial_to_keep, :]
