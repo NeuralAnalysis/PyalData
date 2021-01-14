@@ -923,6 +923,36 @@ def trial_average(trial_data, condition):
                         .drop("trial_id", axis="columns"))
 
 
+
+@utils.copy_td
+def subtract_cross_condition_mean(trial_data, cond_idx=None):
+    """
+    Find mean across all trials for each time point and subtract it from each trial.
+    
+    Parameters
+    ----------
+    trial_data : pd.DataFrame
+        data in trial_data format
+    cond_idx : array-like
+        indices of trials to use for mean
+
+    Returns
+    -------
+    trial_data with mean subtracted
+    """
+    if cond_idx is None:
+        cond_idx = trial_data.index
+
+    time_fields = utils.get_time_varying_fields(trial_data)
+    for col in time_fields:
+        assert len(set([arr.shape for arr in trial_data[col]])) == 1, f"Trials should have the same time coordinates in order to average."
+
+    for col in time_fields:
+        mean_act = np.mean(trial_data.loc[cond_idx, col], axis=0)
+        trial_data[col] = [arr - mean_act for arr in trial_data[col]]
+    return trial_data
+        
+
 def get_average_firing_rates(trial_data, signal, divide_by_bin_size=None):
     """
     Calculate average firing rates of neurons across all trials
@@ -968,6 +998,7 @@ def remove_low_firing_neurons(trial_data, signal, threshold, divide_by_bin_size=
     Remove neurons from signal whose average firing rate
     across all trials is lower than a threshold
 
+
     Parameters
     ----------
     trial_data : pd.DataFrame
@@ -1001,5 +1032,6 @@ def remove_low_firing_neurons(trial_data, signal, threshold, divide_by_bin_size=
     unit_guide = area_name + "_unit_guide"
 
     trial_data[unit_guide] = [arr[mask, :] for arr in trial_data[unit_guide]]
+
 
     return trial_data
