@@ -909,7 +909,7 @@ def trial_average(trial_data, condition):
     -------
     pd.DataFrame with the fields averaged and the trial_id column dropped
     """
-    time_fields = pyaldata.utils.get_time_varying_fields(trial_data)
+    time_fields = utils.get_time_varying_fields(trial_data)
     for col in time_fields:
         assert len(set([arr.shape for arr in trial_data[col]])) == 1, f"Trials should have the same time coordinates."
 
