@@ -542,4 +542,4 @@ def extract_interval_from_signal(trial_data, signal, epoch_fun):
     -------
     list of the extracted np.arrays
     """
-    return [trial[signal][epoch_fun(trial), :] for (i, trial) in trial_data.iterrows()]
+    return [trial[signal][epoch_fun(trial), ...] for (i, trial) in trial_data.iterrows()]
