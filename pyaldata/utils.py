@@ -255,9 +255,9 @@ def concat_trials(trial_data, signal, trial_indices=None):
     stacked on top of each other
     """
     if trial_indices is None:
-        return np.concatenate(trial_data[signal], axis=0)
+        return np.concatenate(trial_data[signal].values, axis=0)
     else:
-        return np.concatenate(trial_data.loc[trial_indices, signal], axis=0)
+        return np.concatenate(trial_data.loc[trial_indices, signal].values, axis=0)
 
 
 def get_signals(trial_data, signals, trial_indices=None):
