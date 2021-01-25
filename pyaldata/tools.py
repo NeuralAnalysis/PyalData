@@ -893,13 +893,14 @@ def copy_fields(trial_data, fields):
 
 def trial_average(trial_data, condition):
     """
-    Trial-average signals after grouping trials by some conditions
+    Trial-average signals, optionally after grouping trials by some conditions
 
     Parameters
     ----------
     trial_data : pd.DataFrame
         data in trial_data format
-    condition : str, array-like trial_data.index, or function
+    condition : str, array-like trial_data.index, function, or None
+        if None, there's no grouping
         if str, group trials by this field
         if array-like, condition is a value that is assigned to each trial (e.g. df.target_id < 4),
         and trials are grouped based on these values
@@ -912,6 +913,9 @@ def trial_average(trial_data, condition):
     time_fields = utils.get_time_varying_fields(trial_data)
     for col in time_fields:
         assert len(set([arr.shape for arr in trial_data[col]])) == 1, f"Trials should have the same time coordinates."
+
+    if condition is None:
+        return trial_data.mean()
 
     if callable(condition):
         groups = [condition(trial) for (i, trial) in trial_data.iterrows()]
