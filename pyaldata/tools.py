@@ -1087,4 +1087,4 @@ def select_trials(trial_data, query, reset_index=True):
     if reset_index:
         return trial_data.loc[trials_to_keep, :].reset_index(drop=True)
     else:
-        return trial_data.loc[trial_to_keep, :]
+        return trial_data.loc[trials_to_keep, :]
