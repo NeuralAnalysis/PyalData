@@ -35,7 +35,16 @@ def mat2dataframe(path, shift_idx_fields, td_name=None):
         pandas dataframe replicating the trial_data format
         each row is a trial
     """
-    mat = scipy.io.loadmat(path, simplify_cells=True)
+    try:
+        mat = scipy.io.loadmat(path, simplify_cells=True)
+    except NotImplementedError:
+        try:
+            import mat73
+        except ImportError:
+            raise ImportError("Must have mat73 installed to load mat73 files.")
+        else:
+            mat = mat73.loadmat(path)
+
     real_keys = [k for k in mat.keys() if not (k.startswith("__") and k.endswith("__"))]
 
     if td_name is None:
