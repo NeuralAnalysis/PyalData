@@ -20,7 +20,7 @@ def fit_regressor_model(trial_data, model, input_signal, output_signal, train_in
 
     Returns
     -------
-    trial_data with out_fieldname added
+    fitted model
     """
     X = utils.concat_trials(trial_data, input_signal, train_indices)
     Y = utils.concat_trials(trial_data, output_signal, train_indices)
