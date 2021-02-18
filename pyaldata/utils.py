@@ -578,9 +578,9 @@ def read_cmp(file_path):
         [col (int), row (int), channel number (str), within_channel_num (int), global electrode number (int)]
     """
     # Open file, remove comments and remove other formatting we don't need
-    f = open(file_path)
-    temp = [line for line in f.readlines() if not line.startswith('//')] 
-    clean_lsts = [remove_cmp_formatting(l) for i, l in enumerate(temp) if not i == 0] 
+    with open(file_path) as f:
+        temp = [line for line in f if not line.startswith('//')] 
+    clean_lsts = [remove_cmp_formatting(l) for l in temp[1:]]
     df = pd.DataFrame(clean_lsts, columns=['array_col', 'array_row', 'channel_num', 'within_channel_num', 'global_enum']).dropna()
 
     # Convert columns to integers - errors='igore' return the column unchanged if it cannot be converted to a numeric type
