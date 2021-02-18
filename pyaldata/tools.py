@@ -337,13 +337,16 @@ def combine_time_bins(trial_data, n_bins, extra_time_fields=None):
 
     # rebin time-varying fields
     def rebin_array(arr, red_fun):
+        if arr.ndim == 1:
+            arr = arr.reshape(-1, 1)
+
         T, N = arr.shape
         T = (T // n_bins) * n_bins # throw away last bins
 
         arr = arr[:T, :]
         arr = arr.reshape(int(T / n_bins), n_bins, N)
 
-        return red_fun(arr, axis=1)
+        return red_fun(arr, axis=1).squeeze()
 
     for col in spike_fields:
         # if we think the column still holds spikes
