@@ -303,7 +303,7 @@ def combine_time_bins(trial_data, n_bins, extra_time_fields=None):
         - spikes
         - rates
         - idx
-        - vel, pos, acc
+        - fields found by utils.get_time_varying_fields
     If you want to include others, specify extra_time_fields
     
     Parameters
@@ -322,8 +322,11 @@ def combine_time_bins(trial_data, n_bins, extra_time_fields=None):
     """
     spike_fields = [col for col in trial_data.columns if col.endswith("spikes")]
     rate_fields = [col for col in trial_data.columns if col.endswith("rates")]
-    kin_fields = ["vel", "pos", "acc"]
     idx_fields = [col for col in trial_data.columns if col.startswith("idx")]
+
+    # check if there are any time-varying fields left
+    other_time_fields = [col for col in utils.get_time_varying_fields(trial_data)
+                         if (col not in spike_fields) and (col not in rate_fields)]
 
     if len(trial_data.bin_size.unique()) != 1:
         raise NotImplementedError("implementation assumes that every trial has the same bin_size")
@@ -348,6 +351,7 @@ def combine_time_bins(trial_data, n_bins, extra_time_fields=None):
 
         return red_fun(arr, axis=1).squeeze()
 
+    # start with spike fields
     for col in spike_fields:
         # if we think the column still holds spikes
         if np.all([utils.all_integer(arr) for arr in trial_data[col]]):
@@ -358,15 +362,23 @@ def combine_time_bins(trial_data, n_bins, extra_time_fields=None):
 
         trial_data[col] = [rebin_array(arr, f) for arr in trial_data[col]]
 
-    for col in kin_fields + rate_fields:
+    # rebin rate fields
+    for col in rate_fields:
         trial_data[col] = [rebin_array(arr, np.mean) for arr in trial_data[col]]
 
+
+
+    # hopefully all time-varying fields were caught but the user can also provide some
     if extra_time_fields is not None:
         if isinstance(extra_time_fields, str):
             extra_time_fields = [extra_time_fields]
 
-        for col in extra_time_fields:
-            trial_data[col] = [rebin_array(arr, np.mean) for arr in trial_data[col]]
+        # remove duplicate field names
+        other_time_fields = list(set(other_time_fields + extra_time_fields))
+
+    # rebin the time-varying fields left
+    for col in other_time_fields:
+        trial_data[col] = [rebin_array(arr, np.mean) for arr in trial_data[col]]
 
 
     return trial_data
