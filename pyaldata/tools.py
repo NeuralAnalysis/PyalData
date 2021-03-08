@@ -697,13 +697,13 @@ def transform_signal(trial_data, signals, transformations, train_trials=None, **
 
 
 @utils.copy_td
-def restrict_to_interval(trial_data, start_point_name, end_point_name=None, before=0, after=0, warn_per_trial=False, reset_index=True):
+def restrict_to_interval(trial_data, start_point_name=None, end_point_name=None, before=0, after=0, epoch_fun=None, warn_per_trial=False, reset_index=True):
     """
     Restrict time-varying fields to an interval around a time point or between two time points
 
     trial_data : pd.DataFrame
         data in trial_data format
-    start_point_name : str
+    start_point_name : str, optional
         name of the time point around which the interval starts
     end_point_name : str, optional
         name of the time point around which the interval ends
@@ -712,6 +712,8 @@ def restrict_to_interval(trial_data, start_point_name, end_point_name=None, befo
         number of time points to extract before the starting time point
     after : int, optional, default 0
         number of time points to extract after the ending time point
+    epoch_fun : function, optional
+        function that takes a trial and returns the epoch to extract
     warn_per_trial : bool, optional, default False
         give more detailed warnings about indexing in each problematic trial
     reset_index : bool, optional, default True
@@ -722,17 +724,18 @@ def restrict_to_interval(trial_data, start_point_name, end_point_name=None, befo
     -------
     data in trial_data format
     """
+    assert (start_point_name is None) ^ (epoch_fun is None), "Give either start_point_name or epoch_fun."
+
     idx_fields = [col for col in trial_data.columns.values if col.startswith("idx")]
     time_fields = utils.get_time_varying_fields(trial_data)
 
-    if (end_point_name is None) and (before == 0) and (after == 0):
-        warnings.warn("Extracting only one time point instead of an interval.")
 
     # extract given interval from the time-varying fields
-    if end_point_name is None:
-        epoch_fun = lambda trial: utils.slice_around_point(trial, start_point_name, before, after)
-    else:
-        epoch_fun = lambda trial: utils.slice_between_points(trial, start_point_name, end_point_name, before, after)
+    if start_point_name is not None:
+        if end_point_name is None:
+            epoch_fun = lambda trial: utils.slice_around_point(trial, start_point_name, before, after)
+        else:
+            epoch_fun = lambda trial: utils.slice_between_points(trial, start_point_name, end_point_name, before, after)
 
     # check in which trials the indexing works properly
     kept_trials_mask = np.array([utils._slice_in_trial(trial, epoch_fun(trial), warn_per_trial)
@@ -751,16 +754,25 @@ def restrict_to_interval(trial_data, start_point_name, end_point_name=None, befo
         trial_data[col] = utils.extract_interval_from_signal(trial_data, col, epoch_fun)
 
     # adjust idx fields
+    def _adjust_field(val, new_T):
+        if isinstance(val, (np.ndarray, list)):
+            return np.array([np.nan
+                             if (idx < 0 or idx > new_T)
+                             else idx
+                             for idx in val])
+        elif ((val < 0) or (val > new_T)):
+            return np.nan
+        else:
+            return val
+
     new_time_lengths = [arr.shape[0] for arr in trial_data[time_fields[0]]]
-    zero_points = [p - before for p in trial_data[start_point_name]]
+    zero_points = [epoch_fun(trial).start for (i, trial) in trial_data.iterrows()]
 
     for col in idx_fields:
         trial_data[col] = [idx - zero_point for (idx, zero_point) in zip(trial_data[col], zero_points)]
 
         # set indices that are now invalid (i.e. not in the restricted interval) to nan
-        trial_data[col] = [np.nan
-                           if ((idx < 0) or (idx > new_T))
-                           else idx
+        trial_data[col] = [_adjust_field(idx, new_T)
                            for (idx, new_T) in zip(trial_data[col], new_time_lengths)]
 
     return trial_data
