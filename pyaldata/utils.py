@@ -463,6 +463,28 @@ def get_time_varying_fields(trial_data, ref_field=None):
     return time_fields
 
 
+def get_trial_length(trial, ref_field=None):
+    """
+    Get the number of time points in the trial
+
+    Parameters
+    ----------
+    trial : pd.Series
+        trial to check
+    ref_field : str, optional
+        time-varying field to use for identifying the length
+        if not given, the first field that ends with "spikes" is used
+
+    Returns
+    -------
+    length : int
+    """
+    if ref_field is None:
+        ref_field = [col for col in trial.index.values if col.endswith("spikes")][0]
+
+    return np.size(trial[ref_field], axis=0)
+
+
 def slice_around_index(idx, before, after):
     """
     Return a slice around an index
@@ -596,3 +618,37 @@ def read_cmp(file_path):
     df_array = df.apply(pd.to_numeric, errors='ignore')
     
     return df_array
+
+
+def _slice_in_trial(trial, sl, warn=False):
+    """
+    Check if the slice is within the trial's time indices
+
+    Parameters
+    ----------
+    trial : pd.Series
+        trial to check
+    sl : slice
+        slice to check
+    warn : bool, optional, default False
+        whether to warn if the slice is outside
+        the trial's time index
+
+    Returns
+    -------
+    is_inside : bool
+    """
+    T = get_trial_length(trial)
+
+    is_inside = True
+
+    if (sl.start < 0):
+        is_inside = False
+        if warn:
+            warnings.warn(f"Invalid time index on trial with ID {trial.trial_id}. Trying to access index {sl.start} < 0")
+    if (sl.stop > T):
+        is_inside = False
+        if warn:
+            warnings.warn(f"Invalid time index on trial with ID {trial.trial_id}. Trying to access index {sl.stop-1} >= {T}")
+
+    return is_inside

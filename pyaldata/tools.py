@@ -7,6 +7,7 @@ from sklearn.decomposition import FactorAnalysis
 from . import utils
 
 import warnings
+warnings.simplefilter("always", UserWarning)
 
 @utils.copy_td
 def smooth_signals(trial_data, signals, std=None, hw=None):
@@ -696,7 +697,7 @@ def transform_signal(trial_data, signals, transformations, train_trials=None, **
 
 
 @utils.copy_td
-def restrict_to_interval(trial_data, start_point_name, end_point_name=None, before=0, after=0):
+def restrict_to_interval(trial_data, start_point_name, end_point_name=None, before=0, after=0, warn_per_trial=False, reset_index=True):
     """
     Restrict time-varying fields to an interval around a time point or between two time points
 
@@ -711,6 +712,11 @@ def restrict_to_interval(trial_data, start_point_name, end_point_name=None, befo
         number of time points to extract before the starting time point
     after : int, optional, default 0
         number of time points to extract after the ending time point
+    warn_per_trial : bool, optional, default False
+        give more detailed warnings about indexing in each problematic trial
+    reset_index : bool, optional, default True
+        whether to reset the dataframe index to [0,1,2,...]
+        or keep the original indices of the kept trials
 
     Returns
     -------
@@ -728,6 +734,19 @@ def restrict_to_interval(trial_data, start_point_name, end_point_name=None, befo
     else:
         epoch_fun = lambda trial: utils.slice_between_points(trial, start_point_name, end_point_name, before, after)
 
+    # check in which trials the indexing works properly
+    kept_trials_mask = np.array([utils._slice_in_trial(trial, epoch_fun(trial), warn_per_trial)
+                                 for (i, trial) in trial_data.iterrows()]).astype(bool)
+    # warn about dropping the problematic trials
+    if np.any(~kept_trials_mask):
+        warnings.warn(f"""Dropping the trials with the following IDs because of invalid time indexing. For more information, try warn_per_trial=True
+
+        {trial_data.trial_id.values[~kept_trials_mask]}""", stacklevel=3)
+
+    # only keep trials in which the indexing works properly
+    trial_data = select_trials(trial_data, kept_trials_mask, reset_index)
+
+    # cut time varying signals
     for col in time_fields:
         trial_data[col] = utils.extract_interval_from_signal(trial_data, col, epoch_fun)
 
