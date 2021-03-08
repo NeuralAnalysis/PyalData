@@ -215,9 +215,22 @@ def copy_td(func):
     """
     @functools.wraps(func)
     def wrapper(*args, **kwargs):
-        if not isinstance(args[0], pd.DataFrame):
-            raise ValueError(f"first argument of {func.__name__} has to be a pandas DataFrame")
-        return func(args[0].copy(), *args[1:], **kwargs)
+        # if there are no positional arguments
+        if len(args) == 0:
+            df = kwargs["trial_data"]
+
+            if not isinstance(df, pd.DataFrame):
+                raise ValueError(f"first argument of {func.__name__} has to be a pandas DataFrame")
+
+            kwargs["trial_data"] = df.copy()
+            return func(**kwargs)
+        else:
+            # dataframe is the first positional argument
+            if not isinstance(args[0], pd.DataFrame):
+                raise ValueError(f"first argument of {func.__name__} has to be a pandas DataFrame")
+
+            return func(args[0].copy(), *args[1:], **kwargs)
+
     return wrapper
 
 
