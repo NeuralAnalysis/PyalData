@@ -982,17 +982,28 @@ def trial_average(trial_data, condition):
         assert len(set([arr.shape for arr in trial_data[col]])) == 1, f"Trials should have the same time coordinates."
 
     if condition is None:
-        return trial_data.mean()
+        av_df = trial_data.mean()
+
+        # calculate the mean of array fields one by one
+        for col in utils.get_array_fields(trial_data):
+            av_df[col] = trial_data[col].mean()
+
+        # keep string fields if they are the same on every trial
+        for col in utils.get_string_fields(trial_data):
+            if trial_data[col].unique().size == 1:
+                av_df[col] = trial_data[col].iloc[0]
+
+        return av_df
 
     if callable(condition):
         groups = [condition(trial) for (i, trial) in trial_data.iterrows()]
     else:
         groups = condition
 
-    return (pd.DataFrame.from_dict({a : b.mean() for (a, b) in trial_data.groupby(groups)},
+    # group by the condition and call trial_average without a condition on the sub-dataframes
+    return (pd.DataFrame.from_dict({a : trial_average(b, None) for (a, b) in trial_data.groupby(groups)},
                                    orient="index")
                         .drop("trial_id", axis="columns"))
-
 
 
 @utils.copy_td

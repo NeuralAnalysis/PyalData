@@ -476,6 +476,38 @@ def get_time_varying_fields(trial_data, ref_field=None):
     return time_fields
 
 
+def get_array_fields(trial_data):
+    """
+    Get the names of columns that contain numpy arrays
+
+    Parameters
+    ----------
+    trial_data : pd.DataFrame
+        data in trial_data format
+
+    Returns
+    -------
+    columns that have array values : list of str
+    """
+    return [col for col in trial_data.columns if all([isinstance(el, np.ndarray) for el in trial_data[col]])]
+
+
+def get_string_fields(trial_data):
+    """
+    Get the names of columns that contain string data
+
+    Parameters
+    ----------
+    trial_data : pd.DataFrame
+        data in trial_data format
+
+    Returns
+    -------
+    columns that have string values : list of str
+    """
+    return [col for col in trial_data.columns if all([isinstance(el, str) for el in trial_data[col]])]
+
+
 def get_trial_length(trial, ref_field=None):
     """
     Get the number of time points in the trial
