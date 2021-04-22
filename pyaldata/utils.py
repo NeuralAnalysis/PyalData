@@ -65,24 +65,6 @@ def mat2dataframe(path, shift_idx_fields, td_name=None):
     return df 
 
 
-def getSig(trial_data, trial, signals):
-    '''
-    Get a matrix containing the requested signal for all time points. 
-    
-    Input:
-    trial_data: DataFrame object with the data
-    trial: Index of the trial we are interested in
-    signals: String or index of the column we want to select
-    
-    Output: 
-    data: matrix with the value held in column of the specified trial
-    
-    '''
-    data = trial_data.loc[trial,signals]
-    
-    return data 
-
-
 def norm_gauss_window(bin_length, std):
     """
     Gaussian window with its mass normalized to 1
