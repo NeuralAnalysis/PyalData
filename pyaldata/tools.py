@@ -138,22 +138,6 @@ def add_gradient(trial_data, signal, outfield=None):
     return trial_data
 
 
-def getTDidx(trial_data, col, v):
-    '''
-    Return tral_data with only the rows where selected column col holds the specific value v
-    
-    Input:
-    trial_data: DataFrame object with data
-    col: column index or string 
-    v: value of interest to select data
-    
-    Output:
-    trial_data: DataFrame object with data
-    
-    '''
-    
-    return  trial_data.loc[trial_data[col] == v]
-
 def truncTD(trial_data,idx_start, idx_end,signals):
     '''
     Function that will truncate the dataframe based on the values of columns idx_start and idx_end
