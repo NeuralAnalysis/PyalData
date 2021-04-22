@@ -138,34 +138,6 @@ def add_gradient(trial_data, signal, outfield=None):
     return trial_data
 
 
-def truncTD(trial_data,idx_start, idx_end,signals):
-    '''
-    Function that will truncate the dataframe based on the values of columns idx_start and idx_end
-    
-    Input:
-    trial_data: DataFrames structure
-    idx_start: column index with values of start time
-    idx_end: column index with value of start time
-    signals: list of signals we want to truncate
-    
-    Output:
-    trial_data: DataFrames structure with truncated data
-    
-    '''
-    trial_data_exit=trial_data.copy()
-    for trial in trial_data.index:
-        for iSig in signals:
-            
-            data=np.array(trial_data.loc[trial,iSig])
-            idx_s=trial_data.loc[trial,idx_start['target']]+idx_start['shift']
-            
-            idx_e=trial_data.loc[trial,idx_end['target']]+idx_end['shift']
-            
-            truncate=data[np.int(idx_s)-1:np.int(idx_e),:]
-            trial_data_exit.at[trial,iSig]=truncate
-    return trial_data_exit
-
-  
 def projLow (trial_data, params, out_info):
     """
     Function to project data to low dimensional space and store scores in trial data
