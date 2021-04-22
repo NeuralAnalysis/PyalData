@@ -138,41 +138,6 @@ def add_gradient(trial_data, signal, outfield=None):
     return trial_data
 
 
-def projLow (trial_data, params, out_info):
-    """
-    Function to project data to low dimensional space and store scores in trial data
-    
-    Input:
-    trial_data: DataFrames structure with data
-    params: struct containing parameters
-        params['algorithm'] : (string) which algorith, e.g. 'pca', 'fa', 'ppca'
-        params['signals']: (list) which signals
-        params['num_dims']: how many dimensions (for FA). Default is dimensionality of input
-    out_info: structure of information obtained from dimReduce.
-        out_info['w']: weight matrix for projections
-        out_info['scores']: scores for the components
-        out_info['eigen']: eigenvalues for PC ranking
-    
-    Output:
-    trial_data: DataFrames structure with data and additional field with 
-    
-    TODO:
-    
-    - SUBTRACT MEAN FROM DATA
-    
-    """
-    signals=params['signals']
-    for iSig in signals:
-        series= trial_data[iSig].copy()
-        for trial in trial_data.index:
-            data = trial_data.loc[trial,'M1_spikes']
-            latent = data.dot(out_info['w'])
-            series.at[trial]=latent
-        trial_data[iSig+'_'+params['algorithm']]=series
-        
-    return trial_data
-
-
 @utils.copy_td
 def binTD (trial_data, num_bins, isSpikes):
 
