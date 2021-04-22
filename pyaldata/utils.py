@@ -319,51 +319,6 @@ def get_sig_by_trial(trial_data, signals, trial_indices=None):
     return np.stack([np.column_stack(row) for row in trial_data.loc[trial_indices, signals].values],
                     axis=-1)
 
-def dimReduce(data, params):
-    """
-    Function to compute the dimensionality reduction. For now handles PCA, PPCA and FA.
-    
-    Input:
-    data: Data to be projected
-    params: struct containing parameters
-        params['algorithm'] : (string) which algorith, e.g. 'pca', 'fa', 'ppca'
-        params['num_dims']: how many dimensions (for FA). Default is dimensionality of input
-    
-    Output:
-    info_out: struct of information
-    .w : wieght matrix for projections
-    .scores: scores for the components
-    .eigen : eigenvalues for PC ranking
-    
-    """
-    alg=params['algorithm'].lower()
-    
-    if alg =='pca':
-        pca = PCA(n_components=data.shape[1])
-        pca.fit(data)
-        w = np.transpose(pca.components_) # Transpose to have one column per pc
-        scores = pca.fit_transform(data) 
-        eigen = pca.explained_variance_ 
-        mu = pca.mean_
-        
-        
-    
-    elif alg == 'fa':
-        fa = FactorAnalyzer(n_factors=params['num_dims'],rotation=None, method='ml')
-        fa.fit(data)
-        w = fa.loadings_
-        scores = fa.transform(data)
-        eigen, f = fa.get_eigenvalues()
-        mu = np.mean(data, axis=0)
-        
-    out_info = dict()
-    out_info['w'] = w
-    out_info['scores'] = scores
-    out_info['eigen'] = eigen
-    out_info['mu'] = mu
-    
-    return out_info
-
 
 def all_integer(arr):
     """
