@@ -382,7 +382,7 @@ def get_time_varying_fields(trial_data, ref_field=None):
 
     ref_field : str (optional)
         time-varying field to use for identifying the rest
-        if not given, the first field that ends with "spikes" is used
+        if not given, the first field that ends with "spikes" or "rates" is used
 
     Returns
     -------
@@ -391,7 +391,8 @@ def get_time_varying_fields(trial_data, ref_field=None):
     """
     if ref_field is None:
         # look for a spikes field
-        ref_field = [col for col in trial_data.columns.values if col.endswith("spikes")][0]
+        ref_field = [col for col in trial_data.columns.values
+                     if col.endswith("spikes") or col.endswith("rates")][0]
 
     # identify candidates based on the first trial
     first_trial = trial_data.iloc[0]
@@ -462,7 +463,7 @@ def get_trial_length(trial, ref_field=None):
     length : int
     """
     if ref_field is None:
-        ref_field = [col for col in trial.index.values if col.endswith("spikes")][0]
+        ref_field = [col for col in trial.index.values if col.endswith("spikes") or col.endswith("rates")][0]
 
     return np.size(trial[ref_field], axis=0)
 
