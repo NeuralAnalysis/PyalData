@@ -1026,3 +1026,27 @@ def select_trials(trial_data, query, reset_index=True):
         return trial_data.loc[trials_to_keep, :].reset_index(drop=True)
     else:
         return trial_data.loc[trials_to_keep, :]
+
+
+def keep_common_trials(df_a, df_b, join_field='trial_id'):
+    """
+    Keep only trials with ID that are found in both data sets
+    
+    Parameters
+    ----------s
+    df_a : pd.DataFrame
+        first data set in trial data format
+    df_b : pd.DataFrame
+        second data set in trial data format
+    join_field : str, optional, default trial_id
+        field based on which trials are matched to each other
+        
+    Returns
+    -------
+    (subset_a, subset_b) : tuple of dataframes
+    """
+    common_ids = np.intersect1d(df_a[join_field].values, df_b[join_field].values)
+    subset_a = select_trials(df_a, lambda trial: trial[join_field] in common_ids)
+    subset_b = select_trials(df_b, lambda trial: trial[join_field] in common_ids)
+    
+    return subset_a, subset_b
