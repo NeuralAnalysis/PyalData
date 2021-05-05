@@ -3,6 +3,8 @@ import numpy as np
 
 from scipy.signal import find_peaks
 
+from . import utils
+
 
 def get_onset_idx(s, min_ds=1.9, s_thresh=10, peak_divisor=2, method="peaks", debug=False):
     """
@@ -84,7 +86,6 @@ def get_onset_idx(s, min_ds=1.9, s_thresh=10, peak_divisor=2, method="peaks", de
 def get_movement_onset(trial, start="idx_go_cue", min_ds=1.9, s_thresh=10, peak_divisor=2, method="peaks", debug=False):
     """
     Get index of movement onset in the trial
-    (only looks after idx_go_cue)
 
     Parameters
     ----------
@@ -120,3 +121,25 @@ def get_movement_onset(trial, start="idx_go_cue", min_ds=1.9, s_thresh=10, peak_
 
     return start_idx + get_onset_idx(trial.vel_norm[start_idx:], min_ds, s_thresh, peak_divisor, method, debug)
 
+
+@utils.copy_td
+def add_movement_onset(trial_data, **kwargs):
+    """
+    Get index of movement onset in every trial
+
+    Parameters
+    ----------
+    trial_data : pd.DataFrame
+        data in trial_data format
+        has to have a vel_norm field
+    kwargs
+        for a list of keyword arguments, see PyalData.movement_onset.get_movement_onset
+
+    Returns
+    -------
+    copy of trial_data with "idx_movement_on" field added
+    """
+    trial_data["idx_movement_on"] = trial_data.apply(lambda trial: get_movement_onset(trial, **kwargs),
+                                                     axis=1)
+
+    return trial_data
