@@ -143,3 +143,104 @@ def add_movement_onset(trial_data, **kwargs):
                                                      axis=1)
 
     return trial_data
+
+
+def get_peak_speed_idx(trial, start="idx_go_cue"):
+    """
+    Get the index of peak velocity in the trial
+
+    Parameters
+    ----------
+    trial : pd.Series
+        trial to get the movement onset in
+        has to have a vel_norm field
+    start : int or string, default "idx_go_cue"
+        if integer: index after which to consider the velocities
+        if string: field containing the index after which to consider the velocities
+
+    Returns
+    -------
+    idx : int
+        index of maximum velocity
+    """
+    if isinstance(start, str):
+        start_idx = int(trial[start])
+    else:
+        start_idx = int(start)
+
+    return start_idx + np.argmax(trial.vel_norm[start_idx:])
+
+
+@utils.copy_td
+def add_peak_speed_idx(trial_data, start="idx_go_cue"):
+    """
+    Get the index of peak velocity in every trial and save it
+    in the field "idx_peak_speed"
+
+    Parameters
+    ----------
+    trial : pd.Series
+        trial to get the movement onset in
+        has to have a vel_norm field
+    start : int or string, default "idx_go_cue"
+        if integer: index after which to consider the velocities
+        if string: field containing the index after which to consider the velocities
+
+    Returns
+    -------
+    copy of trial_data with "idx_peak_speed" added
+    """
+    trial_data["idx_peak_speed"] = trial_data.apply(lambda trial: get_peak_speed_idx(trial),
+                                                     axis=1)
+
+    return trial_data
+
+
+def get_peak_speed(trial, start="idx_go_cue"):
+    """
+    Get peak speed in the trial during movement.
+
+    Parameters
+    ----------
+    trial : pd.Series
+        trial to get the movement onset in
+        has to have a vel_norm field
+    start : int or string, default "idx_go_cue"
+        if integer: index after which to consider the velocities
+        if string: field containing the index after which to consider the velocities
+
+    Returns
+    -------
+    maximum of the velocity's norm during movement
+    """
+    if isinstance(start, str):
+        start_idx = int(trial[start])
+    else:
+        start_idx = int(start)
+
+    return np.max(trial.vel_norm[start_idx:])
+
+
+@utils.copy_td
+def add_peak_speed(trial_data, start="idx_go_cue"):
+    """
+    Get the peak velocity in every trial and save it
+    in the field "peak_speed"
+
+    Parameters
+    ----------
+    trial : pd.Series
+        trial to get the movement onset in
+        has to have a vel_norm field
+    start : int or string, default "idx_go_cue"
+        if integer: index after which to consider the velocities
+        if string: field containing the index after which to consider the velocities
+
+    Returns
+    -------
+    copy of trial_data with "peak_speed" added
+    """
+    trial_data["peak_speed"] = trial_data.apply(lambda trial: get_peak_speed(trial),
+                                                axis=1)
+
+    return trial_data
