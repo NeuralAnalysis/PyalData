@@ -139,7 +139,7 @@ def add_gradient(trial_data, signal, outfield=None):
 
 
 @utils.copy_td
-def combine_time_bins(trial_data, n_bins, extra_time_fields=None):
+def combine_time_bins(trial_data, n_bins, extra_time_fields=None, ref_field=None):
     """
     Re-bin data by combining n_bins timesteps
 
@@ -155,11 +155,13 @@ def combine_time_bins(trial_data, n_bins, extra_time_fields=None):
     ----------
     trial_data : pd.DataFrame
         data in trial_data format
-        
     n_bins : int
         number of bins to combine into one
     extra_time_fields : list of str (optional)
         extra time-varying signals to adjust
+    ref_field : str (optional)
+        time-varying field to use for identifying the rest
+        if not given, the first field that ends with "spikes" or "rates" is used
 
     Returns
     -------
@@ -170,7 +172,7 @@ def combine_time_bins(trial_data, n_bins, extra_time_fields=None):
     idx_fields = [col for col in trial_data.columns if col.startswith("idx")]
 
     # check if there are any time-varying fields left
-    other_time_fields = [col for col in utils.get_time_varying_fields(trial_data)
+    other_time_fields = [col for col in utils.get_time_varying_fields(trial_data, ref_field)
                          if (col not in spike_fields) and (col not in rate_fields)]
 
     if len(trial_data.bin_size.unique()) != 1:
@@ -541,7 +543,7 @@ def transform_signal(trial_data, signals, transformations, train_trials=None, **
 
 
 @utils.copy_td
-def restrict_to_interval(trial_data, start_point_name=None, end_point_name=None, before=0, after=0, epoch_fun=None, warn_per_trial=False, reset_index=True):
+def restrict_to_interval(trial_data, start_point_name=None, end_point_name=None, before=0, after=0, epoch_fun=None, warn_per_trial=False, reset_index=True, ref_field=None):
     """
     Restrict time-varying fields to an interval around a time point or between two time points
 
@@ -563,6 +565,9 @@ def restrict_to_interval(trial_data, start_point_name=None, end_point_name=None,
     reset_index : bool, optional, default True
         whether to reset the dataframe index to [0,1,2,...]
         or keep the original indices of the kept trials
+    ref_field : str (optional)
+        time-varying field to use for identifying the rest
+        if not given, the first field that ends with "spikes" or "rates" is used
 
     Returns
     -------
@@ -571,7 +576,7 @@ def restrict_to_interval(trial_data, start_point_name=None, end_point_name=None,
     assert (start_point_name is None) ^ (epoch_fun is None), "Give either start_point_name or epoch_fun."
 
     idx_fields = [col for col in trial_data.columns.values if col.startswith("idx")]
-    time_fields = utils.get_time_varying_fields(trial_data)
+    time_fields = utils.get_time_varying_fields(trial_data, ref_field)
 
 
     # extract given interval from the time-varying fields
@@ -802,7 +807,7 @@ def copy_fields(trial_data, fields):
     return trial_data
 
 
-def trial_average(trial_data, condition):
+def trial_average(trial_data, condition, ref_field=None):
     """
     Trial-average signals, optionally after grouping trials by some conditions
 
@@ -816,12 +821,15 @@ def trial_average(trial_data, condition):
         if array-like, condition is a value that is assigned to each trial (e.g. df.target_id < 4),
         and trials are grouped based on these values
         if function, it should take a trial and return a value. the trials will be grouped based on these values
+    ref_field : str (optional)
+        time-varying field to use for identifying the rest
+        if not given, the first field that ends with "spikes" or "rates" is used
 
     Returns
     -------
     pd.DataFrame with the fields averaged and the trial_id column dropped
     """
-    time_fields = utils.get_time_varying_fields(trial_data)
+    time_fields = utils.get_time_varying_fields(trial_data, ref_field)
     for col in time_fields:
         assert len(set([arr.shape for arr in trial_data[col]])) == 1, f"Trials should have the same time coordinates."
 
@@ -851,7 +859,7 @@ def trial_average(trial_data, condition):
 
 
 @utils.copy_td
-def subtract_cross_condition_mean(trial_data, cond_idx=None):
+def subtract_cross_condition_mean(trial_data, cond_idx=None, ref_field=None):
     """
     Find mean across all trials for each time point and subtract it from each trial.
     
@@ -861,6 +869,9 @@ def subtract_cross_condition_mean(trial_data, cond_idx=None):
         data in trial_data format
     cond_idx : array-like
         indices of trials to use for mean
+    ref_field : str (optional)
+        time-varying field to use for identifying the rest
+        if not given, the first field that ends with "spikes" or "rates" is used
 
     Returns
     -------
@@ -869,7 +880,7 @@ def subtract_cross_condition_mean(trial_data, cond_idx=None):
     if cond_idx is None:
         cond_idx = trial_data.index
 
-    time_fields = utils.get_time_varying_fields(trial_data)
+    time_fields = utils.get_time_varying_fields(trial_data, ref_field)
     for col in time_fields:
         assert len(set([arr.shape for arr in trial_data[col]])) == 1, f"Trials should have the same time coordinates in order to average."
 
