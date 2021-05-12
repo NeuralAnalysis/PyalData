@@ -112,7 +112,7 @@ def add_firing_rates(trial_data, method, std=None, hw=None, win=None):
 
 
 @utils.copy_td
-def add_gradient(trial_data, signal, outfield=None):
+def add_gradient(trial_data, signal, outfield=None, normalize=False):
     """
     Compute the gradient of signal in time
 
@@ -125,6 +125,9 @@ def add_gradient(trial_data, signal, outfield=None):
     outfield : str (optional)
         if given, the name of the field in which to store the gradient
         if not given, 'd' is prepended to the signal
+    normalize : bool, default False
+        normalize gradient by bin size
+        for example put the dt in v = ds/dt :)
 
     Returns
     -------
@@ -135,6 +138,9 @@ def add_gradient(trial_data, signal, outfield=None):
         outfield = 'd' + signal
 
     trial_data[outfield] = [np.gradient(s, axis=0) for s in trial_data[signal]]
+
+    if normalize:
+        trial_data[outfield] = trial_data[outfield] / trial_data.bin_size
 
     return trial_data
 
