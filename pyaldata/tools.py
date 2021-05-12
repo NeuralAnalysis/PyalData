@@ -1056,3 +1056,16 @@ def keep_common_trials(df_a, df_b, join_field='trial_id'):
     subset_b = select_trials(df_b, lambda trial: trial[join_field] in common_ids)
     
     return subset_a, subset_b
+
+
+
+# monkey-patch pd.DataFrame to support looping through it with df.trials
+@property
+def trials(df):
+    """
+    Generator for looping through trials of a data set
+    """
+    for (i, trial) in df.iterrows():
+        yield trial
+
+pd.DataFrame.trials = trials
