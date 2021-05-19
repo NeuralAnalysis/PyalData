@@ -543,7 +543,7 @@ def transform_signal(trial_data, signals, transformations, train_trials=None, **
 
 
 @utils.copy_td
-def restrict_to_interval(trial_data, start_point_name=None, end_point_name=None, rel_start=0, rel_end=0, before=None, after=None, epoch_fun=None, warn_per_trial=False, reset_index=True):
+def restrict_to_interval(trial_data, start_point_name=None, end_point_name=None, rel_start=0, rel_end=0, before=None, after=None, epoch_fun=None, warn_per_trial=False, reset_index=True, ref_field=None):
     """
     Restrict time-varying fields to an interval around a time point or between two time points
 
