@@ -550,7 +550,7 @@ def transform_signal(trial_data, signals, transformations, train_trials=None, **
 
 
 @utils.copy_td
-def restrict_to_interval(trial_data, start_point_name=None, end_point_name=None, before=0, after=0, epoch_fun=None, warn_per_trial=False, reset_index=True, ref_field=None):
+def restrict_to_interval(trial_data, start_point_name=None, end_point_name=None, rel_start=0, rel_end=0, before=None, after=None, epoch_fun=None, warn_per_trial=False, reset_index=True, ref_field=None):
     """
     Restrict time-varying fields to an interval around a time point or between two time points
 
@@ -561,10 +561,18 @@ def restrict_to_interval(trial_data, start_point_name=None, end_point_name=None,
     end_point_name : str, optional
         name of the time point around which the interval ends
         if None, the interval is created around start_point_name
-    before : int, optional, default 0
+    rel_start : int, default 0
+        when to start extracting relative to the starting time point
+        replaces the 'before' option
+    rel_end : int, default 0
+        when to stop extracting relative to the ending time point
+        replaces the 'after' option
+    before (deprecated) : int, optional, default None
         number of time points to extract before the starting time point
-    after : int, optional, default 0
+        Please use rel_start instead.
+    after (deprecated): int, optional, default None
         number of time points to extract after the ending time point
+        Please use rel_end instead.
     epoch_fun : function, optional
         function that takes a trial and returns the epoch to extract
     warn_per_trial : bool, optional, default False
@@ -580,6 +588,13 @@ def restrict_to_interval(trial_data, start_point_name=None, end_point_name=None,
     -------
     data in trial_data format
     """
+    if before is not None:
+        warnings.warn("'before' is deprecated. Use 'rel_start' instead.")
+        rel_start = -before
+    if after is not None:
+        warnings.warn("'after' is deprecated. Use 'rel_end' instead.")
+        rel_end = after
+
     assert (start_point_name is None) ^ (epoch_fun is None), "Give either start_point_name or epoch_fun."
 
     idx_fields = [col for col in trial_data.columns.values if col.startswith("idx")]
@@ -589,9 +604,9 @@ def restrict_to_interval(trial_data, start_point_name=None, end_point_name=None,
     # extract given interval from the time-varying fields
     if start_point_name is not None:
         if end_point_name is None:
-            epoch_fun = lambda trial: utils.slice_around_point(trial, start_point_name, before, after)
+            epoch_fun = lambda trial: utils.slice_around_point(trial, start_point_name, -rel_start, rel_end)
         else:
-            epoch_fun = lambda trial: utils.slice_between_points(trial, start_point_name, end_point_name, before, after)
+            epoch_fun = lambda trial: utils.slice_between_points(trial, start_point_name, end_point_name, -rel_start, rel_end)
 
     # check in which trials the indexing works properly
     kept_trials_mask = np.array([utils._slice_in_trial(trial, epoch_fun(trial), warn_per_trial)
