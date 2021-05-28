@@ -1071,3 +1071,24 @@ def keep_common_trials(df_a, df_b, join_field='trial_id'):
     subset_b = select_trials(df_b, lambda trial: trial[join_field] in common_ids)
     
     return subset_a, subset_b
+
+
+def stack_time_average(trial_data, signal):
+    """
+    Average signal in time in each trial, then stack them into an
+    n_trials x n_features array
+
+    Parameters
+    ----------
+    trial_data : pd.DataFrame
+        data in trial_data format
+    signal : str
+        signal to work on
+
+    Returns
+    -------
+    X : 2D np.array
+        n_trials x n_features array in which every row is
+        the time-averaged signal in a trial
+    """
+    return np.stack([np.mean(arr, axis=0) for arr in trial_data[signal]])
