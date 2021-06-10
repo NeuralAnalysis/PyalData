@@ -510,7 +510,7 @@ def slice_around_point(trial, point_name, before, after):
     -------
     slice object
     """
-    return slice_around_index(trial[point_name], before, after)
+    return slice_around_index(int(trial[point_name]), before, after)
 
 
 def slice_between_points(trial, start_point_name, end_point_name, before, after):
@@ -536,7 +536,7 @@ def slice_between_points(trial, start_point_name, end_point_name, before, after)
     slice object
     """
 
-    return slice(trial[start_point_name]-before, trial[end_point_name]+after+1)
+    return slice(int(trial[start_point_name])-before, int(trial[end_point_name])+after+1)
 
 
 def extract_interval_from_signal(trial_data, signal, epoch_fun):
