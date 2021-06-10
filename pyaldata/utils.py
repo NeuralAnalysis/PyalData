@@ -510,7 +510,7 @@ def slice_around_point(trial, point_name, before, after):
     -------
     slice object
     """
-    return slice_around_index(trial[point_name], before, after)
+    return slice_around_index(int(trial[point_name]), before, after)
 
 
 def slice_between_points(trial, start_point_name, end_point_name, before, after):
@@ -536,7 +536,7 @@ def slice_between_points(trial, start_point_name, end_point_name, before, after)
     slice object
     """
 
-    return slice(trial[start_point_name]-before, trial[end_point_name]+after+1)
+    return slice(int(trial[start_point_name])-before, int(trial[end_point_name])+after+1)
 
 
 def extract_interval_from_signal(trial_data, signal, epoch_fun):
@@ -603,7 +603,7 @@ def read_cmp(file_path):
     return df_array
 
 
-def _slice_in_trial(trial, sl, warn=False):
+def _slice_in_trial(trial, epoch_fun, start_point_name=None, end_point_name=None, warn=False):
     """
     Check if the slice is within the trial's time indices
 
@@ -611,8 +611,12 @@ def _slice_in_trial(trial, sl, warn=False):
     ----------
     trial : pd.Series
         trial to check
-    sl : slice
-        slice to check
+    epoch_fun : function
+        function to generate the slice
+    start_point_name : str, optional
+        name of the time point around which the interval starts
+    end_point_name : str, optional
+        name of the time point around which the interval ends
     warn : bool, optional, default False
         whether to warn if the slice is outside
         the trial's time index
@@ -625,6 +629,20 @@ def _slice_in_trial(trial, sl, warn=False):
 
     is_inside = True
 
+    if start_point_name is not None:
+        if not np.isfinite(trial[start_point_name]):
+            is_inside = False
+            if warn:
+                warnings.warn(f"Invalid time index on trial with ID {trial.trial_id}. Start index is not finite.")
+    if end_point_name is not None:
+        if not np.isfinite(trial[end_point_name]):
+            is_inside = False
+            if warn:
+                warnings.warn(f"Invalid time index on trial with ID {trial.trial_id}. End index is not finite.")
+    if is_inside is False:
+        return is_inside  # otherwise next line might throw an error
+
+    sl = epoch_fun(trial)
     if (sl.start < 0):
         is_inside = False
         if warn:

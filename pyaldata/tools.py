@@ -609,8 +609,10 @@ def restrict_to_interval(trial_data, start_point_name=None, end_point_name=None,
             epoch_fun = lambda trial: utils.slice_between_points(trial, start_point_name, end_point_name, -rel_start, rel_end)
 
     # check in which trials the indexing works properly
-    kept_trials_mask = np.array([utils._slice_in_trial(trial, epoch_fun(trial), warn_per_trial)
-                                 for (i, trial) in trial_data.iterrows()]).astype(bool)
+    kept_trials_mask = np.array([utils._slice_in_trial(trial, epoch_fun,
+                                                       start_point_name,
+                                                       end_point_name,
+                                                       warn_per_trial) for (_, trial) in trial_data.iterrows()]).astype(bool)
     # warn about dropping the problematic trials
     if np.any(~kept_trials_mask):
         warnings.warn(f"""Dropping the trials with the following IDs because of invalid time indexing. For more information, try warn_per_trial=True
