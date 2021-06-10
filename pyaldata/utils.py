@@ -625,10 +625,6 @@ def _slice_in_trial(trial, sl, warn=False):
 
     is_inside = True
 
-    if not np.all(np.isfinite([sl.start, sl.stop])):
-        is_inside = False
-        if warn:
-            warnings.warn(f"Invalid time index on trial with ID {trial.trial_id}. One index is not finite.")
     if (sl.start < 0):
         is_inside = False
         if warn:
