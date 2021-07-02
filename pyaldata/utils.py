@@ -535,8 +535,35 @@ def slice_between_points(trial, start_point_name, end_point_name, before, after)
     -------
     slice object
     """
+def generate_epoch_fun(start_point_name, end_point_name=None, rel_start=0, rel_end=0):
+    """
+    Return a function that slices a trial around/between time points
 
-    return slice(trial[start_point_name]-before, trial[end_point_name]+after+1)
+    Parameters
+    ----------
+    start_point_name : str
+        name of the time point around which the interval starts
+    end_point_name : str, optional
+        name of the time point around which the interval ends
+        if None, the interval is created around start_point_name
+    rel_start : int, default 0
+        when to start extracting relative to the starting time point
+        replaces the 'before' option
+    rel_end : int, default 0
+        when to stop extracting relative to the ending time point
+        replaces the 'after' option
+
+    Returns
+    -------
+    epoch_fun : function
+        function that can be used to extract the interval from a trial
+    """
+    if end_point_name is None:
+        epoch_fun = lambda trial: slice_around_point(trial, start_point_name, -rel_start, rel_end)
+    else:
+        epoch_fun = lambda trial: slice_between_points(trial, start_point_name, end_point_name, -rel_start, rel_end)
+
+    return epoch_fun
 
 
 def extract_interval_from_signal(trial_data, signal, epoch_fun):
