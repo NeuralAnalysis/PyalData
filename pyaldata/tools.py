@@ -992,7 +992,8 @@ def remove_low_firing_neurons(trial_data, signal, threshold, divide_by_bin_size=
     area_name = utils.remove_suffix(signal, suffix)
     unit_guide = area_name + "_unit_guide"
 
-    trial_data[unit_guide] = [arr[mask, :] for arr in trial_data[unit_guide]]
+    if unit_guide in trial_data.columns:
+        trial_data[unit_guide] = [arr[mask, :] for arr in trial_data[unit_guide]]
 
     if verbose:
         print(f"Removed {np.sum(~mask)} neurons from {signal}.")
