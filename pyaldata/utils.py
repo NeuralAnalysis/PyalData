@@ -486,7 +486,15 @@ def slice_around_index(idx, before, after):
     -------
     slice(idx-before, idx+after+1)
     """
-    return slice(idx-before, idx+after+1)
+    start = idx - before
+    end = idx + after + 1
+
+    if np.isfinite(start):
+        start = int(start)
+    if np.isfinite(end):
+        end = int(end)
+
+    return slice(start, end)
 
 
 def slice_around_point(trial, point_name, before, after):
@@ -510,7 +518,15 @@ def slice_around_point(trial, point_name, before, after):
     -------
     slice object
     """
-    return slice_around_index(trial[point_name], before, after)
+    start = trial[point_name] - before
+    end = trial[point_name] + after + 1
+
+    if np.isfinite(start):
+        start = int(start)
+    if np.isfinite(end):
+        end = int(end)
+
+    return slice(start, end)
 
 
 def slice_between_points(trial, start_point_name, end_point_name, before, after):
@@ -535,6 +551,17 @@ def slice_between_points(trial, start_point_name, end_point_name, before, after)
     -------
     slice object
     """
+    start = trial[start_point_name] - before
+    end = trial[end_point_name] + after + 1
+
+    if np.isfinite(start):
+        start = int(start)
+    if np.isfinite(end):
+        end = int(end)
+
+    return slice(start, end)
+
+
 def generate_epoch_fun(start_point_name, end_point_name=None, rel_start=0, rel_end=0):
     """
     Return a function that slices a trial around/between time points
