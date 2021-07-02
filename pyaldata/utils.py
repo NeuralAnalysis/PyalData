@@ -688,4 +688,13 @@ def _slice_in_trial(trial, sl, warn=False):
         if warn:
             warnings.warn(f"Invalid time index on trial with ID {trial.trial_id}. Trying to access index {sl.stop-1} >= {T}")
 
+    if not np.isfinite(sl.start):
+        is_inside = False
+        if warn:
+            warnings.warn(f"Invalid time index on trial with ID {trial.trial_id}. Starting point is {sl.start}")
+    if not np.isfinite(sl.stop):
+        is_inside = False
+        if warn:
+            warnings.warn(f"Invalid time index on trial with ID {trial.trial_id}. End point is {sl.stop}")
+
     return is_inside
