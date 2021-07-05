@@ -5,6 +5,7 @@ import pandas as pd
 from scipy.stats import norm
 import scipy.io
 import scipy.signal as scs
+from scipy.ndimage import convolve1d
 
 from sklearn.decomposition import PCA
 from sklearn.decomposition import FactorAnalysis
@@ -95,24 +96,6 @@ def hw_to_std(hw):
     return hw / (2 * np.sqrt(2 * np.log(2)))
 
 
-def _smooth_1d(arr, win):
-    """
-    Smooth a 1D array by convolving it with a window
-
-    Parameters
-    ----------
-    arr : 1D array-like
-        time-series to smooth
-    win : 1D array-like
-        smoothing window to convolve with
-
-    Returns
-    -------
-    1D np.array of the same length as arr
-    """
-    return scs.convolve(arr, win, mode = "same")
-
-
 def smooth_data(mat, dt=None, std=None, hw=None, win=None):
     """
     Smooth a 1D array or every column of a 2D array
@@ -145,10 +128,8 @@ def smooth_data(mat, dt=None, std=None, hw=None, win=None):
 
         win = norm_gauss_window(dt, std)
 
-    if mat.ndim == 1:
-        return _smooth_1d(mat, win)
-    elif mat.ndim == 2:
-        return np.column_stack([_smooth_1d(mat[:, i], win) for i in range(mat.shape[1])])
+    if mat.ndim == 1 or mat.ndim == 2:
+        return convolve1d(mat, win, axis=0, output=np.float32, mode='reflect')
     else:
         raise ValueError("mat has to be a 1D or 2D array")
 
