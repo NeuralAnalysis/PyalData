@@ -600,13 +600,9 @@ def restrict_to_interval(trial_data, start_point_name=None, end_point_name=None,
     idx_fields = [col for col in trial_data.columns.values if col.startswith("idx")]
     time_fields = utils.get_time_varying_fields(trial_data, ref_field)
 
-
-    # extract given interval from the time-varying fields
+    # generate epoch_fun if the interval is given with time points
     if start_point_name is not None:
-        if end_point_name is None:
-            epoch_fun = lambda trial: utils.slice_around_point(trial, start_point_name, -rel_start, rel_end)
-        else:
-            epoch_fun = lambda trial: utils.slice_between_points(trial, start_point_name, end_point_name, -rel_start, rel_end)
+        epoch_fun = utils.generate_epoch_fun(start_point_name, end_point_name, rel_start, rel_end)
 
     # check in which trials the indexing works properly
     kept_trials_mask = np.array([utils._slice_in_trial(trial, epoch_fun(trial), warn_per_trial)

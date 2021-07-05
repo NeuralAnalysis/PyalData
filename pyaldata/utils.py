@@ -486,7 +486,15 @@ def slice_around_index(idx, before, after):
     -------
     slice(idx-before, idx+after+1)
     """
-    return slice(idx-before, idx+after+1)
+    start = idx - before
+    end = idx + after + 1
+
+    if np.isfinite(start):
+        start = int(start)
+    if np.isfinite(end):
+        end = int(end)
+
+    return slice(start, end)
 
 
 def slice_around_point(trial, point_name, before, after):
@@ -510,7 +518,15 @@ def slice_around_point(trial, point_name, before, after):
     -------
     slice object
     """
-    return slice_around_index(trial[point_name], before, after)
+    start = trial[point_name] - before
+    end = trial[point_name] + after + 1
+
+    if np.isfinite(start):
+        start = int(start)
+    if np.isfinite(end):
+        end = int(end)
+
+    return slice(start, end)
 
 
 def slice_between_points(trial, start_point_name, end_point_name, before, after):
@@ -535,8 +551,46 @@ def slice_between_points(trial, start_point_name, end_point_name, before, after)
     -------
     slice object
     """
+    start = trial[start_point_name] - before
+    end = trial[end_point_name] + after + 1
 
-    return slice(trial[start_point_name]-before, trial[end_point_name]+after+1)
+    if np.isfinite(start):
+        start = int(start)
+    if np.isfinite(end):
+        end = int(end)
+
+    return slice(start, end)
+
+
+def generate_epoch_fun(start_point_name, end_point_name=None, rel_start=0, rel_end=0):
+    """
+    Return a function that slices a trial around/between time points
+
+    Parameters
+    ----------
+    start_point_name : str
+        name of the time point around which the interval starts
+    end_point_name : str, optional
+        name of the time point around which the interval ends
+        if None, the interval is created around start_point_name
+    rel_start : int, default 0
+        when to start extracting relative to the starting time point
+        replaces the 'before' option
+    rel_end : int, default 0
+        when to stop extracting relative to the ending time point
+        replaces the 'after' option
+
+    Returns
+    -------
+    epoch_fun : function
+        function that can be used to extract the interval from a trial
+    """
+    if end_point_name is None:
+        epoch_fun = lambda trial: slice_around_point(trial, start_point_name, -rel_start, rel_end)
+    else:
+        epoch_fun = lambda trial: slice_between_points(trial, start_point_name, end_point_name, -rel_start, rel_end)
+
+    return epoch_fun
 
 
 def extract_interval_from_signal(trial_data, signal, epoch_fun):
@@ -633,5 +687,14 @@ def _slice_in_trial(trial, sl, warn=False):
         is_inside = False
         if warn:
             warnings.warn(f"Invalid time index on trial with ID {trial.trial_id}. Trying to access index {sl.stop-1} >= {T}")
+
+    if not np.isfinite(sl.start):
+        is_inside = False
+        if warn:
+            warnings.warn(f"Invalid time index on trial with ID {trial.trial_id}. Starting point is {sl.start}")
+    if not np.isfinite(sl.stop):
+        is_inside = False
+        if warn:
+            warnings.warn(f"Invalid time index on trial with ID {trial.trial_id}. End point is {sl.stop}")
 
     return is_inside
