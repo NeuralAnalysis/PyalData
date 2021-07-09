@@ -351,6 +351,8 @@ def z_score_signal(trial_data, signals, train_trials=None):
         col_mean = np.mean(whole_signal, axis=0)
         col_std = np.std(whole_signal, axis=0)
 
+        col_std[col_std==0] = 1  # to avoid dividing by zero
+
         trial_data[signal] = [(s - col_mean) / col_std for s in trial_data[signal]]
 
     return trial_data
