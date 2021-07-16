@@ -4,6 +4,7 @@ import numpy as np
 from scipy.signal import find_peaks
 
 from . import utils
+from . import tools
 
 
 def get_onset_idx(s, min_ds=1.9, s_thresh=10, peak_divisor=2, method="peaks", debug=False):
@@ -139,6 +140,11 @@ def add_movement_onset(trial_data, **kwargs):
     -------
     copy of trial_data with "idx_movement_on" field added
     """
+    if 'vel' not in trial_data.columns:
+        trial_data = tools.add_gradient(trial_data, 'pos', 'vel', True)
+    if 'vel_norm' not in trial_data.columns:
+        trial_data = tools.add_norm(trial_data, 'vel')
+
     trial_data["idx_movement_on"] = trial_data.apply(lambda trial: get_movement_onset(trial, **kwargs),
                                                      axis=1)
 
