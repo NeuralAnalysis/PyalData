@@ -528,9 +528,9 @@ def slice_around_point(trial, point_name, before, after):
     start = trial[point_name] - before
     end = trial[point_name] + after + 1
 
-    if np.isfinite(start):
+    if pd.notna(start):
         start = int(start)
-    if np.isfinite(end):
+    if pd.notna(end):
         end = int(end)
 
     return slice(start, end)
@@ -684,27 +684,25 @@ def _slice_in_trial(trial, sl, warn=False):
     """
     T = get_trial_length(trial)
 
-    is_inside = True
-
-    if (sl.start < 0):
-        is_inside = False
-        if warn:
-            warnings.warn(f"Invalid time index on trial with ID {trial.trial_id}. Trying to access index {sl.start} < 0")
-    if (sl.stop > T):
-        is_inside = False
-        if warn:
-            warnings.warn(f"Invalid time index on trial with ID {trial.trial_id}. Trying to access index {sl.stop-1} >= {T}")
-
-    if not np.isfinite(sl.start):
-        is_inside = False
+    if pd.isna(sl.start):
         if warn:
             warnings.warn(f"Invalid time index on trial with ID {trial.trial_id}. Starting point is {sl.start}")
-    if not np.isfinite(sl.stop):
-        is_inside = False
+        return False
+    if pd.isna(sl.stop):
         if warn:
             warnings.warn(f"Invalid time index on trial with ID {trial.trial_id}. End point is {sl.stop}")
+        return False
 
-    return is_inside
+    if (sl.start < 0):
+        if warn:
+            warnings.warn(f"Invalid time index on trial with ID {trial.trial_id}. Trying to access index {sl.start} < 0")
+        return False
+    if (sl.stop > T):
+        if warn:
+            warnings.warn(f"Invalid time index on trial with ID {trial.trial_id}. Trying to access index {sl.stop-1} >= {T}")
+        return False
+
+    return True
 
 
 @copy_td
