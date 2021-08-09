@@ -140,7 +140,10 @@ def add_gradient(trial_data, signal, outfield=None, normalize=False):
     trial_data[outfield] = [np.gradient(s, axis=0) for s in trial_data[signal]]
 
     if normalize:
-        trial_data[outfield] = trial_data[outfield] / trial_data.bin_size
+        bin_size = trial_data.bin_size.values[0]
+        assert all(trial_data.bin_size.values == bin_size)
+
+        trial_data[outfield] = trial_data[outfield] / bin_size
 
     return trial_data
 
