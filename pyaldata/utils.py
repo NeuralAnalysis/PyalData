@@ -60,12 +60,10 @@ def mat2dataframe(path, shift_idx_fields, td_name=None):
     df = pd.DataFrame(mat[td_name])
 
     df = clean_0d_array_fields(df)
-    df = clean_integer_array_fields(df)
+    df = clean_integer_fields(df)
 
     if shift_idx_fields:
         df = backshift_idx_fields(df)
-
-    df = df.convert_dtypes()
 
     return df 
 
@@ -352,8 +350,6 @@ def backshift_idx_fields(trial_data):
         # using a list comprehension to still work if the idx field itself is an array
         trial_data[col] = [idx - 1 for idx in trial_data[col]]
 
-    trial_data = trial_data.convert_dtypes()
-
     return trial_data
 
 
@@ -528,9 +524,9 @@ def slice_around_point(trial, point_name, before, after):
     start = trial[point_name] - before
     end = trial[point_name] + after + 1
 
-    if pd.notna(start):
+    if np.isfinite(start):
         start = int(start)
-    if pd.notna(end):
+    if np.isfinite(end):
         end = int(end)
 
     return slice(start, end)
@@ -684,25 +680,27 @@ def _slice_in_trial(trial, sl, warn=False):
     """
     T = get_trial_length(trial)
 
-    if pd.isna(sl.start):
-        if warn:
-            warnings.warn(f"Invalid time index on trial with ID {trial.trial_id}. Starting point is {sl.start}")
-        return False
-    if pd.isna(sl.stop):
-        if warn:
-            warnings.warn(f"Invalid time index on trial with ID {trial.trial_id}. End point is {sl.stop}")
-        return False
+    is_inside = True
 
     if (sl.start < 0):
+        is_inside = False
         if warn:
             warnings.warn(f"Invalid time index on trial with ID {trial.trial_id}. Trying to access index {sl.start} < 0")
-        return False
     if (sl.stop > T):
+        is_inside = False
         if warn:
             warnings.warn(f"Invalid time index on trial with ID {trial.trial_id}. Trying to access index {sl.stop-1} >= {T}")
-        return False
 
-    return True
+    if not np.isfinite(sl.start):
+        is_inside = False
+        if warn:
+            warnings.warn(f"Invalid time index on trial with ID {trial.trial_id}. Starting point is {sl.start}")
+    if not np.isfinite(sl.stop):
+        is_inside = False
+        if warn:
+            warnings.warn(f"Invalid time index on trial with ID {trial.trial_id}. End point is {sl.stop}")
+
+    return is_inside
 
 
 @copy_td
@@ -729,7 +727,7 @@ def clean_0d_array_fields(df):
 
 
 @copy_td
-def clean_integer_array_fields(df):
+def clean_integer_fields(df):
     """
     Modify fields that store integers as floats to store them as integers instead.
 
@@ -751,5 +749,14 @@ def clean_integer_array_fields(df):
             else:
                 if all([np.allclose(int_arr, arr) for (int_arr, arr) in zip(int_arrays, df[field])]):
                     df[field] = int_arrays
+        else:
+            if not isinstance(df[field].values[0], str):
+                try:
+                    int_version = np.int32(df[field])
+                except:
+                        print(f"field {field} could not be converted to int.")
+                else:
+                    if np.allclose(int_version, df[field]):
+                        df[field] = int_version
 
     return df
