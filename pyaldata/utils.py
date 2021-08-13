@@ -85,10 +85,10 @@ def norm_gauss_window(bin_length, std):
     -------
     win : 1D np.array
         Gaussian kernel with
-            length: 5*std/bin_length
+            length: 10*std/bin_length
             mass normalized to 1
     """
-    win = scs.gaussian(int(5*std/bin_length), std/bin_length)
+    win = scs.gaussian(int(10*std/bin_length), std/bin_length)
     return win / np.sum(win)
 
 
