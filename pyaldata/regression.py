@@ -1,4 +1,5 @@
 from . import utils
+from . import extract_signals
 
 
 def fit_regressor_model(trial_data, model, input_signal, output_signal, train_indices=None):
@@ -22,8 +23,8 @@ def fit_regressor_model(trial_data, model, input_signal, output_signal, train_in
     -------
     fitted model
     """
-    X = utils.concat_trials(trial_data, input_signal, train_indices)
-    Y = utils.concat_trials(trial_data, output_signal, train_indices)
+    X = extract_signals.concat_trials(trial_data, input_signal, train_indices)
+    Y = extract_signals.concat_trials(trial_data, output_signal, train_indices)
 
     model.fit(X, Y)
 

@@ -2,6 +2,7 @@ import numpy as np
 import pandas as pd
 
 from . import utils
+from . import extract_signals
 
 import warnings
 warnings.simplefilter("always", UserWarning)
@@ -313,7 +314,7 @@ def center_signal(trial_data, signals, train_trials=None):
         signals = [signals]
 
     for signal in signals:
-        whole_signal = utils.concat_trials(trial_data, signal, train_trials)
+        whole_signal = extract_signals.concat_trials(trial_data, signal, train_trials)
         col_mean = np.mean(whole_signal, axis=0)
 
         trial_data[signal] = [s - col_mean for s in trial_data[signal]]
@@ -346,7 +347,7 @@ def z_score_signal(trial_data, signals, train_trials=None):
         signals = [signals]
 
     for signal in signals:
-        whole_signal = utils.concat_trials(trial_data, signal, train_trials)
+        whole_signal = extract_signals.concat_trials(trial_data, signal, train_trials)
         col_mean = np.mean(whole_signal, axis=0)
         col_std = np.std(whole_signal, axis=0)
 
@@ -416,7 +417,7 @@ def zero_normalize_signal(trial_data, signals, train_trials=None):
         signals = [signals]
 
     for signal in signals:
-        whole_signal = utils.concat_trials(trial_data, signal, train_trials)
+        whole_signal = extract_signals.concat_trials(trial_data, signal, train_trials)
         col_min = np.min(whole_signal, axis=0)
         col_range = utils.get_range(whole_signal, axis=0)
 
@@ -449,7 +450,7 @@ def center_normalize_signal(trial_data, signals, train_trials=None):
         signals = [signals]
 
     for signal in signals:
-        whole_signal = utils.concat_trials(trial_data, signal, train_trials)
+        whole_signal = extract_signals.concat_trials(trial_data, signal, train_trials)
         col_mean = np.mean(whole_signal, axis=0)
         col_range = utils.get_range(whole_signal, axis=0)
 
@@ -483,7 +484,7 @@ def soft_normalize_signal(trial_data, signals, train_trials=None, alpha=5):
         signals = [signals]
 
     for signal in signals:
-        whole_signal = utils.concat_trials(trial_data, signal, train_trials)
+        whole_signal = extract_signals.concat_trials(trial_data, signal, train_trials)
 
         norm_factor = utils.get_range(whole_signal) + alpha
 
@@ -744,9 +745,9 @@ def get_average_firing_rates(trial_data, signal, divide_by_bin_size=None):
             raise ValueError(f"Please specify divide_by_bin_size. Could not determine it automatically.")
 
     if divide_by_bin_size:
-        return np.mean(utils.concat_trials(trial_data, signal), axis=0) / trial_data.bin_size[0]
+        return np.mean(extract_signals.concat_trials(trial_data, signal), axis=0) / trial_data.bin_size[0]
     else:
-        return np.mean(utils.concat_trials(trial_data, signal), axis=0)
+        return np.mean(extract_signals.concat_trials(trial_data, signal), axis=0)
 
 
 @utils.copy_td
