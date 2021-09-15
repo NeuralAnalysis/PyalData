@@ -79,3 +79,24 @@ def get_sig_by_trial(trial_data, signals, trial_indices=None):
 
     return np.stack([np.column_stack(row) for row in trial_data.loc[trial_indices, signals].values],
                     axis=-1)
+
+
+def stack_time_average(trial_data, signal):
+    """
+    Average signal in time in each trial, then stack them into an
+    n_trials x n_features array
+
+    Parameters
+    ----------
+    trial_data : pd.DataFrame
+        data in trial_data format
+    signal : str
+        signal to work on
+
+    Returns
+    -------
+    X : 2D np.array
+        n_trials x n_features array in which every row is
+        the time-averaged signal in a trial
+    """
+    return np.stack([np.mean(arr, axis=0) for arr in trial_data[signal]])
