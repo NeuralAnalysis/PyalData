@@ -6,3 +6,4 @@ from .dim_reduction import *
 from .movement_onset_and_peak import *
 from .data_cleaning import *
 from .io import *
+from .cmp import *
