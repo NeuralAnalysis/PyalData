@@ -9,3 +9,4 @@ from .io import *
 from .cmp import *
 from .smoothing import *
 from .signal_transformations import *
+from .firing_rates import *
