@@ -8,3 +8,4 @@ from .data_cleaning import *
 from .io import *
 from .cmp import *
 from .smoothing import *
+from .signal_transformations import *
