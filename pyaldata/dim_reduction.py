@@ -1,4 +1,5 @@
 from . import utils
+from . import extract_signals
 
 
 def fit_dim_reduce_model(trial_data, model, signal, train_trials=None, fit_kwargs=None):
@@ -32,7 +33,7 @@ def fit_dim_reduce_model(trial_data, model, signal, train_trials=None, fit_kwarg
      if fit_kwargs is None:
          fit_kwargs = {}
 
-     model.fit(utils.concat_trials(trial_data, signal, train_trials),
+     model.fit(extract_signals.concat_trials(trial_data, signal, train_trials),
                **fit_kwargs)
 
      return model
