@@ -1,117 +1,8 @@
 import numpy as np
 import pandas as pd
 
-import scipy.signal as scs
-from scipy.ndimage import convolve1d
-
 import functools
 import warnings
-
-
-def norm_gauss_window(bin_length, std):
-    """
-    Gaussian window with its mass normalized to 1
-
-    Parameters
-    ----------
-    bin_length : float
-        binning length of the array we want to smooth in ms
-    std : float
-        standard deviation of the window
-        use hw_to_std to calculate std based from half-width
-
-    Returns
-    -------
-    win : 1D np.array
-        Gaussian kernel with
-            length: 10*std/bin_length
-            mass normalized to 1
-    """
-    win = scs.gaussian(int(10*std/bin_length), std/bin_length)
-    return win / np.sum(win)
-
-
-def hw_to_std(hw):
-    """
-    Convert half-width to standard deviation for a Gaussian window.
-    """
-    return hw / (2 * np.sqrt(2 * np.log(2)))
-
-
-def smooth_data(mat, dt=None, std=None, hw=None, win=None):
-    """
-    Smooth a 1D array or every column of a 2D array
-
-    Parameters
-    ----------
-    mat : 1D or 2D np.array
-        vector or matrix whose columns to smooth
-        e.g. recorded spikes in a time x neuron array
-    dt : float
-        length of the timesteps in seconds
-    std : float (optional)
-        standard deviation of the smoothing window
-    hw : float (optional)
-        half-width of the smoothing window
-    win : 1D array-like (optional)
-        smoothing window to convolve with
-
-    Returns
-    -------
-    np.array of the same size as mat
-    """
-    assert only_one_is_not_None((win, hw, std))
-
-    if win is None:
-        assert dt is not None, "specify dt if not supplying window"
-
-        if std is None:
-            std = hw_to_std(hw)
-
-        win = norm_gauss_window(dt, std)
-
-    if mat.ndim == 1 or mat.ndim == 2:
-        return convolve1d(mat, win, axis=0, output=np.float32, mode='reflect')
-    else:
-        raise ValueError("mat has to be a 1D or 2D array")
-
-
-def z_score(arr):
-    """
-    z-score function by removing the mean and dividing by the standard deviation (across time)
-
-    Parameters
-    ----------
-    arr : np.array
-        array to z-score
-        time on the first axis
-
-    Returns
-    -------
-    z-scored array with the same shape as arr
-    """
-    return (arr - arr.mean(axis=0)) / arr.std(axis=0)
-
-
-def center(arr):
-    """
-    Center array by removing the mean across time
-
-    Parameters
-    ----------
-    arr : np.array
-        array to center
-        time on the first axis
-
-    Returns
-    -------
-    centered array with the same shape as arr
-    """
-    return arr - arr.mean(axis=0)
-
-
-def only_one_is_not_None(args):
-    return sum([arg is not None for arg in args]) == 1
 
 
 def copy_td(func):
@@ -170,26 +61,6 @@ def all_integer(arr):
     return np.all(np.isclose(arr, np.array(arr, dtype=int)))
 
   
-def get_range(arr, axis=None):
-    """
-    Difference between the highest and the lowest value
-
-    Parameters
-    ----------
-    arr : np.array
-        typically a time-varying signal
-    axis : int, optional
-        if None, difference between the largest and smallest value in the array
-        if int, calculate the range along the given axis
-
-    Returns
-    -------
-    if axis=None, a single integer
-    if axis is not None, an np.array containing the ranges along the given axis
-    """
-    return np.max(arr, axis=axis) - np.min(arr, axis=axis)
-
-
 def get_time_varying_fields(trial_data, ref_field=None):
     """
     Identify time-varying fields in the dataset
