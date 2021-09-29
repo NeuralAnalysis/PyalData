@@ -4,3 +4,11 @@ from .interval import *
 from .regression import *
 from .dim_reduction import *
 from .movement_onset_and_peak import *
+from .data_cleaning import *
+from .io import *
+from .cmp import *
+from .extract_signals import *
+from .smoothing import *
+from .signal_transformations import *
+from .firing_rates import *
+from .df_utils import *
