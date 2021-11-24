@@ -1,5 +1,8 @@
 import numpy as np
 
+from .utils import get_trial_length
+from .array_utils import split_array
+
 
 def concat_trials(trial_data, signal, trial_indices=None):
     """
@@ -23,6 +26,28 @@ def concat_trials(trial_data, signal, trial_indices=None):
         return np.concatenate(trial_data[signal].values, axis=0)
     else:
         return np.concatenate(trial_data.loc[trial_indices, signal].values, axis=0)
+
+
+def reverse_concat(X, df):
+    """
+    Split a concatenated signal X into chunks corresponding to each trial of df.
+    ~ reverse concat_trials
+    
+    See also split_array
+    
+    Parameters
+    ----------
+    X : np.array
+        concatenated signal
+    df : pd.DataArray
+        dataframe from which the signal was extracted by concatenating the trials
+        
+    Returns
+    -------
+    list of subarrays
+    """
+    trial_lengths = [get_trial_length(trial) for (i, trial) in df.iterrows()]
+    return split_array(X, trial_lengths)
 
 
 def get_signals(trial_data, signals, trial_indices=None):
