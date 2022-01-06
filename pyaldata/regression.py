@@ -1,4 +1,7 @@
 from . import utils
+from . import extract_signals
+
+import numpy as np
 
 
 def fit_regressor_model(trial_data, model, input_signal, output_signal, train_indices=None):
@@ -22,8 +25,8 @@ def fit_regressor_model(trial_data, model, input_signal, output_signal, train_in
     -------
     fitted model
     """
-    X = utils.concat_trials(trial_data, input_signal, train_indices)
-    Y = utils.concat_trials(trial_data, output_signal, train_indices)
+    X = extract_signals.concat_trials(trial_data, input_signal, train_indices)
+    Y = extract_signals.concat_trials(trial_data, output_signal, train_indices)
 
     model.fit(X, Y)
 
@@ -89,3 +92,30 @@ def regress(trial_data, model, input_signal, output_signal, out_fieldname, train
         return trial_data, model
     else:
         return trial_data
+
+
+@utils.copy_td
+def expand_field_in_time(trial_data, field, out_fieldname=None):
+    """
+    Expand scalar field to a vector that can be used for prediction per time point.
+
+    Parameters
+    ----------
+    trial_data : pd.DataFrame
+        data in trial_data format
+    field : string
+        field to expand
+    out_fieldname : string, default {field}_ext
+        field to put the expanded values to
+
+    Returns
+    -------
+    trial_data with out_fieldname added
+    """
+    if out_fieldname is None:
+        out_fieldname = field + "_ext"
+        
+    trial_data[out_fieldname] = [trial[field] * np.ones(utils.get_trial_length(trial))
+                                 for (i, trial) in trial_data.iterrows()]
+
+    return trial_data
