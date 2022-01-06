@@ -187,7 +187,7 @@ def add_norm(trial_data, signal):
     
     return trial_data
     
-
+    
 def trial_average(trial_data, condition, ref_field=None):
     """
     Trial-average signals, optionally after grouping trials by some conditions

@@ -157,3 +157,4 @@ def get_trial_length(trial, ref_field=None):
         ref_field = [col for col in trial.index.values if col.endswith("spikes") or col.endswith("rates")][0]
 
     return np.size(trial[ref_field], axis=0)
+
