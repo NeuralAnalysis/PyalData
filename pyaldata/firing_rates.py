@@ -32,7 +32,7 @@ def add_firing_rates(trial_data, method, std=None, hw=None, win=None):
     rate_suffix = "_rates"
     rate_fields = [utils.remove_suffix(name, "_spikes") + rate_suffix for name in spike_fields]
 
-    bin_size = trial_data.iloc[0]['bin_size']
+    bin_size = trial_data['bin_size'].values[0]
 
     if method == "smooth":
         if win is None:
@@ -96,7 +96,7 @@ def get_average_firing_rates(trial_data, signal, divide_by_bin_size=None):
             raise ValueError(f"Please specify divide_by_bin_size. Could not determine it automatically.")
 
     if divide_by_bin_size:
-        return np.mean(extract_signals.concat_trials(trial_data, signal), axis=0) / trial_data.bin_size[0]
+        return np.mean(extract_signals.concat_trials(trial_data, signal), axis=0) / trial_data['bin_size'].values[0]
     else:
         return np.mean(extract_signals.concat_trials(trial_data, signal), axis=0)
 
