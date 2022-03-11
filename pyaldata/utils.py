@@ -54,12 +54,6 @@ def remove_suffix(text, suffix):
     return text
 
 
-def all_integer(arr):
-    """
-    Check if all the values in arr are approximately integers
-    """
-    return np.all(np.isclose(arr, np.array(arr, dtype=int)))
-
   
 def get_time_varying_fields(trial_data, ref_field=None):
     """
