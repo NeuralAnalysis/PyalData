@@ -90,7 +90,7 @@ def only_one_is_not_None(args):
 
 
 @utils.copy_td
-def smooth_signals(trial_data, signals, std=None, hw=None):
+def smooth_signals(trial_data, signals, std=None, hw=None, backend='convolve1d'):
     """
     Smooth signal(s)
 
@@ -105,6 +105,9 @@ def smooth_signals(trial_data, signals, std=None, hw=None):
         default 0.05 seconds
     hw : float (optional)
         half-width of the smoothing window
+    backend: str, either 'convolve1d' or 'convolve'
+        'convolve1d' (default) uses scipy.ndimage.convolve1d, which is faster in some cases
+        'convolve'  uses scipy.signal.convolve, which may scale better for large arrays
 
     Returns
     -------
@@ -127,6 +130,6 @@ def smooth_signals(trial_data, signals, std=None, hw=None):
 
     for (i, trial) in trial_data.iterrows():
         for sig in signals:
-            trial_data.at[i, sig] = smooth_data(trial[sig], win=win)
+            trial_data.at[i, sig] = smooth_data(trial[sig], win=win, backend=backend)
 
     return trial_data

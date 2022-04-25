@@ -5,7 +5,7 @@ from . import utils
 from . import extract_signals
 
 @utils.copy_td
-def add_firing_rates(trial_data, method, std=None, hw=None, win=None):
+def add_firing_rates(trial_data, method, std=None, hw=None, win=None, backend='convolve1d'):
     """
     Add firing rate fields calculated from spikes fields
 
@@ -22,6 +22,9 @@ def add_firing_rates(trial_data, method, std=None, hw=None, win=None):
         half-width of the of the Gaussian window to smooth with
     win : 1D array
         smoothing window
+    backend: str, either 'convolve1d' or 'convolve'
+        'convolve1d' (default) uses scipy.ndimage.convolve1d, which is faster in some cases
+        'convolve'  uses scipy.signal.convolve, which may scale better for large arrays
 
     Returns
     -------
@@ -47,7 +50,7 @@ def add_firing_rates(trial_data, method, std=None, hw=None, win=None):
             win = smoothing.norm_gauss_window(bin_size, std)
 
         def get_rate(spikes):
-            return smoothing.smooth_data(spikes, win=win) / bin_size
+            return smoothing.smooth_data(spikes, win=win, backend=backend) / bin_size
 
     elif method == "bin":
         assert all([x is None for x in [std, hw, win]]), "If binning is used, then std, hw, and win have no effect, so don't provide them."
