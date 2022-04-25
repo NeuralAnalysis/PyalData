@@ -211,7 +211,7 @@ def trial_average(trial_data, condition, ref_field=None):
     -------
     pd.DataFrame with the fields averaged and the trial_id column dropped
     """
-    assert integrity_checks.trials_are_same_length(trial_data), "Trials should have the same length"
+    assert integrity_checks.trials_are_same_length(trial_data, ref_field), "Trials should have the same length"
 
     if condition is None:
         av_df = trial_data.mean()
