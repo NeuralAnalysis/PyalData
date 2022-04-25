@@ -2,6 +2,7 @@ import numpy as np
 import pandas as pd
 
 from . import utils
+from . import integrity_checks
 import warnings
 warnings.simplefilter("always", UserWarning)
 
@@ -106,7 +107,7 @@ def combine_time_bins(trial_data, n_bins, extra_time_fields=None, ref_field=None
     # start with spike fields
     for col in spike_fields:
         # if we think the column still holds spikes
-        if np.all([utils.all_integer(arr) for arr in trial_data[col]]):
+        if np.all([integrity_checks.all_integer(arr) for arr in trial_data[col]]):
             f = np.sum
         # if they are not integers anymore, e.g. because they've been smoothed
         else:
@@ -210,9 +211,7 @@ def trial_average(trial_data, condition, ref_field=None):
     -------
     pd.DataFrame with the fields averaged and the trial_id column dropped
     """
-    time_fields = utils.get_time_varying_fields(trial_data, ref_field)
-    for col in time_fields:
-        assert len(set([arr.shape for arr in trial_data[col]])) == 1, f"Trials should have the same time coordinates."
+    assert integrity_checks.trials_are_same_length(trial_data, ref_field), "Trials should have the same length"
 
     if condition is None:
         av_df = trial_data.mean()
