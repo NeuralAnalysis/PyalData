@@ -52,7 +52,7 @@ def smooth_data(mat, dt=None, std=None, hw=None, win=None, backend='convolve1d')
         half-width of the smoothing window
     win : 1D array-like (optional)
         smoothing window to convolve with
-    backend: either 'convolve1d' or 'convolve'
+    backend: str, either 'convolve1d' or 'convolve'
         'convolve1d' (default) uses scipy.ndimage.convolve1d, which is faster in some cases
         'convolve'  uses scipy.signal.convolve, which may scale better for large arrays
 
@@ -75,14 +75,15 @@ def smooth_data(mat, dt=None, std=None, hw=None, win=None, backend='convolve1d')
     if mat.ndim != 1 and mat.ndim != 2:
         raise ValueError("mat has to be a 1D or 2D array")
         
-    if backend=='convolve1d':
+    if backend == 'convolve1d':
         return convolve1d(mat, win, axis=0, output=np.float32, mode='reflect')
-
-    if backend=='convolve':
-        if mat.ndim==1:
-            return scs.convolve(mat,win,mode='same')
-        elif mat.ndim==2:
-            return np.column_stack([scs.convolve(mat[:,i],win,mode='same') for i in range(mat.shape[1])])
+    elif backend == 'convolve':
+        if mat.ndim == 1:
+            return scs.convolve(mat, win, mode='same')
+        elif mat.ndim == 2:
+            return np.column_stack([scs.convolve(mat[:,i], win, mode='same') for i in range(mat.shape[1])])
+    else:
+        raise ValueError("backend has to either 'convolve1d' or 'convolve'")
 
 
 def only_one_is_not_None(args):
