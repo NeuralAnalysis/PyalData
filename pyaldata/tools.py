@@ -8,43 +8,6 @@ warnings.simplefilter("always", UserWarning)
 
 
 @utils.copy_td
-def add_gradient(trial_data, signal, outfield=None, normalize=False):
-    """
-    Compute the gradient of signal in time
-
-    Parameters
-    ----------
-    trial_data : pd.DataFrame
-        data in trial_data format
-    signal : str
-        name of the field whose gradient we want to compute
-    outfield : str (optional)
-        if given, the name of the field in which to store the gradient
-        if not given, 'd' is prepended to the signal
-    normalize : bool, default False
-        normalize gradient by bin size
-        for example put the dt in v = ds/dt :)
-
-    Returns
-    -------
-    trial_data : pd.DataFrame
-        copy of trial_data with the gradient field added
-    """
-    if outfield is None:
-        outfield = 'd' + signal
-
-    trial_data[outfield] = [np.gradient(s, axis=0) for s in trial_data[signal]]
-
-    if normalize:
-        bin_size = trial_data.bin_size.values[0]
-        assert all(trial_data.bin_size.values == bin_size)
-
-        trial_data[outfield] = trial_data[outfield] / bin_size
-
-    return trial_data
-
-
-@utils.copy_td
 def combine_time_bins(trial_data, n_bins, extra_time_fields=None, ref_field=None):
     """
     Re-bin data by combining n_bins timesteps
@@ -161,30 +124,6 @@ def merge_signals(trial_data, signals, out_fieldname):
         raise ValueError(f"This function is for merging multiple signals. Only got {signals[0]}")
 
     trial_data[out_fieldname] = [np.column_stack(row) for row in trial_data[signals].values]
-    
-    return trial_data
-
-
-@utils.copy_td
-def add_norm(trial_data, signal):
-    """
-    Add the norm of the signal to the dataframe
-
-    Parameters
-    ----------
-    trial_data : pd.DataFrame
-        trial_data dataframe
-    signal : str
-        field to take the norm of
-
-    Returns
-    -------
-    td : pd.DataFrame
-        trial_data with '_norm' fields added
-    """
-    norm_field_name = signal + "_norm"
-
-    trial_data[norm_field_name] = [np.linalg.norm(s, axis=1) for s in trial_data[signal]]
     
     return trial_data
     
