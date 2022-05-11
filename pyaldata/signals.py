@@ -104,3 +104,44 @@ def add_norm(trial_data: pd.DataFrame, signal: str) -> pd.DataFrame:
     return trial_data
 
 
+@utils.copy_td
+def add_speed(trial_data: pd.DataFrame, signal: str, outfield: Optional[str] = None, normalize_gradient: Optional[bool] = True) -> pd.DataFrame:
+    """
+    Add "signal speed".
+    Useful for calculating "trajectory speed" or the speed of the hand from the positions.
+    
+    Parameters
+    ----------
+    trial_data : pd.DataFrame
+        data in TrialData format
+    signal : str
+        signal whose "speed" to calculate
+    outfield : str, optional
+        name of the output field
+        if not given, it's "{signal}_speed"
+    normalize_gradient : bool, default True
+        normalize the gradient of the signal by the
+        bin size of the signal
+        
+    Returns
+    -------
+    copy of trial_data with `outfield` added
+    """
+    if outfield is None:
+        outfield = f"{signal}_speed"
+        
+    gradients = [np.gradient(s, axis=0) for s in trial_data[signal]]
+    
+    if normalize_gradient:
+        bin_size = trial_data.bin_size.values[0]
+        assert all(trial_data.bin_size.values == bin_size)
+        
+        gradients = [g / bin_size for g in gradients]
+        
+    if signal_dimensionality(trial_data, signal) == 1:
+        # 1D signal's norm is its absolute value
+        trial_data[outfield] = [np.abs(g) for g in gradients]
+    else:
+        trial_data[outfield] = [np.linalg.norm(g, axis=1) for g in gradients]
+
+    return trial_data
