@@ -14,3 +14,4 @@ from .firing_rates import *
 from .df_utils import *
 from .array_utils import *
 from .integrity_checks import *
+from .signals import *
