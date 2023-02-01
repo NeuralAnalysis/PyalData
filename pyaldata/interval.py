@@ -75,8 +75,11 @@ def restrict_to_interval(trial_data, start_point_name=None, end_point_name=None,
     trial_data = tools.select_trials(trial_data, kept_trials_mask, reset_index)
 
     # cut time varying signals
-    for col in time_fields:
-        trial_data[col] = extract_interval_from_signal(trial_data, col, epoch_fun)
+    trim_temp = {
+        col: extract_interval_from_signal(trial_data, col, epoch_fun)
+        for col in time_fields
+    }
+    trial_data = trial_data.assign(**trim_temp)
 
     # adjust idx fields
     def _adjust_field(val, new_T):

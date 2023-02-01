@@ -5,7 +5,7 @@ from . import utils
 from . import extract_signals
 
 @utils.copy_td
-def add_firing_rates(trial_data, method, std=None, hw=None, win=None):
+def add_firing_rates(trial_data, method, std=None, hw=None, win=None, backend='convolve1d'):
     """
     Add firing rate fields calculated from spikes fields
 
@@ -22,6 +22,9 @@ def add_firing_rates(trial_data, method, std=None, hw=None, win=None):
         half-width of the of the Gaussian window to smooth with
     win : 1D array
         smoothing window
+    backend: str, either 'convolve1d' or 'convolve'
+        'convolve1d' (default) uses scipy.ndimage.convolve1d, which is faster in some cases
+        'convolve'  uses scipy.signal.convolve, which may scale better for large arrays
 
     Returns
     -------
@@ -32,7 +35,7 @@ def add_firing_rates(trial_data, method, std=None, hw=None, win=None):
     rate_suffix = "_rates"
     rate_fields = [utils.remove_suffix(name, "_spikes") + rate_suffix for name in spike_fields]
 
-    bin_size = trial_data.iloc[0]['bin_size']
+    bin_size = trial_data['bin_size'].values[0]
 
     if method == "smooth":
         if win is None:
@@ -47,7 +50,7 @@ def add_firing_rates(trial_data, method, std=None, hw=None, win=None):
             win = smoothing.norm_gauss_window(bin_size, std)
 
         def get_rate(spikes):
-            return smoothing.smooth_data(spikes, win=win) / bin_size
+            return smoothing.smooth_data(spikes, win=win, backend=backend) / bin_size
 
     elif method == "bin":
         assert all([x is None for x in [std, hw, win]]), "If binning is used, then std, hw, and win have no effect, so don't provide them."
@@ -96,7 +99,7 @@ def get_average_firing_rates(trial_data, signal, divide_by_bin_size=None):
             raise ValueError(f"Please specify divide_by_bin_size. Could not determine it automatically.")
 
     if divide_by_bin_size:
-        return np.mean(extract_signals.concat_trials(trial_data, signal), axis=0) / trial_data.bin_size[0]
+        return np.mean(extract_signals.concat_trials(trial_data, signal), axis=0) / trial_data['bin_size'].values[0]
     else:
         return np.mean(extract_signals.concat_trials(trial_data, signal), axis=0)
 

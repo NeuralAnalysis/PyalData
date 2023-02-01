@@ -2,45 +2,9 @@ import numpy as np
 import pandas as pd
 
 from . import utils
+from . import integrity_checks
 import warnings
 warnings.simplefilter("always", UserWarning)
-
-
-@utils.copy_td
-def add_gradient(trial_data, signal, outfield=None, normalize=False):
-    """
-    Compute the gradient of signal in time
-
-    Parameters
-    ----------
-    trial_data : pd.DataFrame
-        data in trial_data format
-    signal : str
-        name of the field whose gradient we want to compute
-    outfield : str (optional)
-        if given, the name of the field in which to store the gradient
-        if not given, 'd' is prepended to the signal
-    normalize : bool, default False
-        normalize gradient by bin size
-        for example put the dt in v = ds/dt :)
-
-    Returns
-    -------
-    trial_data : pd.DataFrame
-        copy of trial_data with the gradient field added
-    """
-    if outfield is None:
-        outfield = 'd' + signal
-
-    trial_data[outfield] = [np.gradient(s, axis=0) for s in trial_data[signal]]
-
-    if normalize:
-        bin_size = trial_data.bin_size.values[0]
-        assert all(trial_data.bin_size.values == bin_size)
-
-        trial_data[outfield] = trial_data[outfield] / bin_size
-
-    return trial_data
 
 
 @utils.copy_td
@@ -106,7 +70,7 @@ def combine_time_bins(trial_data, n_bins, extra_time_fields=None, ref_field=None
     # start with spike fields
     for col in spike_fields:
         # if we think the column still holds spikes
-        if np.all([utils.all_integer(arr) for arr in trial_data[col]]):
+        if np.all([integrity_checks.all_integer(arr) for arr in trial_data[col]]):
             f = np.sum
         # if they are not integers anymore, e.g. because they've been smoothed
         else:
@@ -162,32 +126,8 @@ def merge_signals(trial_data, signals, out_fieldname):
     trial_data[out_fieldname] = [np.column_stack(row) for row in trial_data[signals].values]
     
     return trial_data
-
-
-@utils.copy_td
-def add_norm(trial_data, signal):
-    """
-    Add the norm of the signal to the dataframe
-
-    Parameters
-    ----------
-    trial_data : pd.DataFrame
-        trial_data dataframe
-    signal : str
-        field to take the norm of
-
-    Returns
-    -------
-    td : pd.DataFrame
-        trial_data with '_norm' fields added
-    """
-    norm_field_name = signal + "_norm"
-
-    trial_data[norm_field_name] = [np.linalg.norm(s, axis=1) for s in trial_data[signal]]
     
-    return trial_data
     
-
 def trial_average(trial_data, condition, ref_field=None):
     """
     Trial-average signals, optionally after grouping trials by some conditions
@@ -210,9 +150,7 @@ def trial_average(trial_data, condition, ref_field=None):
     -------
     pd.DataFrame with the fields averaged and the trial_id column dropped
     """
-    time_fields = utils.get_time_varying_fields(trial_data, ref_field)
-    for col in time_fields:
-        assert len(set([arr.shape for arr in trial_data[col]])) == 1, f"Trials should have the same time coordinates."
+    assert integrity_checks.trials_are_same_length(trial_data, ref_field), "Trials should have the same length"
 
     if condition is None:
         av_df = trial_data.mean()

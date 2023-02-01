@@ -54,12 +54,6 @@ def remove_suffix(text, suffix):
     return text
 
 
-def all_integer(arr):
-    """
-    Check if all the values in arr are approximately integers
-    """
-    return np.all(np.isclose(arr, np.array(arr, dtype=int)))
-
   
 def get_time_varying_fields(trial_data, ref_field=None):
     """
@@ -157,3 +151,4 @@ def get_trial_length(trial, ref_field=None):
         ref_field = [col for col in trial.index.values if col.endswith("spikes") or col.endswith("rates")][0]
 
     return np.size(trial[ref_field], axis=0)
+
