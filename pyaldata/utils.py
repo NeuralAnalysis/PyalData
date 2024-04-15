@@ -59,9 +59,36 @@ def remove_suffix(text, suffix):
     return text
 
 
+def determine_ref_field(trial_data: pd.DataFrame) -> str:
+    """
+    Find a dataframe column that ends with 'spikes' or 'rates', so it is likely to have a time dimension and can be used as a reference.
+
+    Assuming spike and rate fields have time as their first dimension,
+    make sure they all have the same number of timepoints,
+    then return one of them.
+    """
+    # look for a spikes field
+    spike_rate_fields = [
+        col
+        for col in trial_data.columns.values
+        if col.endswith("spikes") or col.endswith("rates")
+    ]
+
+    # make sure they all have the same number of timepoints on all trials
+    for i, trial in trial_data.iterrows():
+        if len({trial[field].shape[0] for field in spike_rate_fields}) != 1:
+            n_tp = {field: trial[field].shape[0] for field in spike_rate_fields}
+            raise ValueError(
+                f"Number of timepoints in spike/rate fields doesn't match. Found these fields: {n_tp}"
+            )
+
+    # if they all match, just return the first one
+    return spike_rate_fields[0]
+
+
 def get_time_varying_fields(
-    trial_data,
-    ref_field=None,
+    trial_data: pd.DataFrame,
+    ref_field: str = None,
     strict_criterion: bool = True,
     warn_if_suspicious: bool = False,
 ):
@@ -97,12 +124,7 @@ def get_time_varying_fields(
         list of fieldnames that store time-varying signals
     """
     if ref_field is None:
-        # look for a spikes field
-        ref_field = [
-            col
-            for col in trial_data.columns.values
-            if col.endswith("spikes") or col.endswith("rates")
-        ][0]
+        ref_field = determine_ref_field(trial_data)
 
     time_fields = []
 
@@ -202,10 +224,18 @@ def get_trial_length(trial, ref_field=None):
     length : int
     """
     if ref_field is None:
-        ref_field = [
+        spike_rate_fields = [
             col
             for col in trial.index.values
             if col.endswith("spikes") or col.endswith("rates")
-        ][0]
+        ]
+
+        if len({trial[field].shape[0] for field in spike_rate_fields}) != 1:
+            n_tp = {field: trial[field].shape[0] for field in spike_rate_fields}
+            raise ValueError(
+                f"Number of timepoints in spike/rate fields doesn't match. Found these fields: {n_tp}"
+            )
+
+        ref_field = spike_rate_fields[0]
 
     return np.size(trial[ref_field], axis=0)
