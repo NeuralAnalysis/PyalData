@@ -86,8 +86,10 @@ def test_strict_other_ref_field():
         incorrect_on_all_trials_rates=True, incorrect_on_all_trials_pos=True
     )
 
-    with pytest.raises(ValueError):
-        get_time_varying_fields(df)
+    assert set(get_time_varying_fields(df, ref_field="incorrect_on_all_trials_rates")) == {
+        "incorrect_on_all_trials_rates",
+        "incorrect_on_all_trials_pos",
+    }
 
 
 def test_old_correct():
