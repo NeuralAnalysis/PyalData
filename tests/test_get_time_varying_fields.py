@@ -58,7 +58,8 @@ def test_strict_warn_if_suspicios():
     df = _generate_mock_data(incorrect_on_one_trial_pos=True)
 
     with pytest.warns():
-        get_time_varying_fields(df, warn_if_suspicious=True)
+        # get_time_varying_fields(df, warn_if_suspicious=True)
+        get_time_varying_fields(df)
 
 
 def test_strict_no_warning_if_not_wanted():
@@ -67,7 +68,7 @@ def test_strict_no_warning_if_not_wanted():
 
     with warnings.catch_warnings():
         warnings.simplefilter("error")
-        get_time_varying_fields(df)
+        get_time_varying_fields(df, warn_if_suspicious=False)
 
 
 def test_strict_wrong_ref_field_given():

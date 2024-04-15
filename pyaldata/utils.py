@@ -90,7 +90,7 @@ def get_time_varying_fields(
     trial_data: pd.DataFrame,
     ref_field: str = None,
     strict_criterion: bool = True,
-    warn_if_suspicious: bool = False,
+    warn_if_suspicious: bool = True,
 ):
     """
     Identify time-varying fields in the dataset
@@ -110,7 +110,7 @@ def get_time_varying_fields(
         it has to contain numpy arrays and the first dimension of the arrays has to match
         the reference field on all trials
 
-    warn_if_suspicious: bool, default False
+    warn_if_suspicious: bool, default True
         only used if strict_criterion is True.
         if a field contains numpy arrays and has the same length as the reference field
         on 80% of the trials, it might be a time-varying field with some errors.
