@@ -1,8 +1,10 @@
 import numpy as np
+import pandas as pd
+
 from . import utils
 
 
-def trials_are_same_length(trial_data, ref_field=None):
+def trials_are_same_length(trial_data: pd.DataFrame, ref_field: str = None) -> bool:
     """
     Check if all trials of a dataset have the same length
 
@@ -21,7 +23,7 @@ def trials_are_same_length(trial_data, ref_field=None):
     return len(set(trial_lengths)) == 1
 
 
-def all_integer(arr):
+def all_integer(arr: np.ndarray) -> bool:
     """
     Check if all the values in arr are approximately integers
     """
