@@ -1,4 +1,5 @@
 import warnings
+from typing import Optional
 
 import numpy as np
 import pandas as pd
@@ -132,7 +133,8 @@ def merge_signals(trial_data, signals, out_fieldname):
     return trial_data
 
 
-def trial_average(trial_data, condition, ref_field=None):
+@utils.copy_td
+def trial_average(trial_data: pd.DataFrame, condition, ref_field: Optional[str] = None):
     """
     Trial-average signals, optionally after grouping trials by some conditions
 
@@ -154,21 +156,30 @@ def trial_average(trial_data, condition, ref_field=None):
     -------
     pd.DataFrame with the fields averaged and the trial_id column dropped
     """
-    assert integrity_checks.trials_are_same_length(
-        trial_data, ref_field
-    ), "Trials should have the same length"
+    if not integrity_checks.trials_are_same_length(trial_data, ref_field):
+        raise ValueError("Trials should have the same length")
 
     if condition is None:
         # keep string fields if they are the same on every trial
+        string_data = {}
         for col in utils.get_string_fields(trial_data):
             if trial_data[col].unique().size == 1:
-                av_df[col] = trial_data[col].iloc[0]
-
-        av_df = trial_data.mean()
+                string_data[col] = trial_data[col].iloc[0]
+            # drop the column so that it won't mess with trial_data.mean()
+            trial_data.drop(columns=col, inplace=True)
 
         # calculate the mean of array fields one by one
+        array_data = {}
         for col in utils.get_array_fields(trial_data):
-            av_df[col] = trial_data[col].mean()
+            array_data[col] = trial_data[col].mean()
+            trial_data.drop(columns=col, inplace=True)
+
+        av_df = trial_data.mean(axis=0, numeric_only=True).to_frame().transpose()
+
+        for col, val in string_data.items():
+            av_df[col] = [val]
+        for col, val in array_data.items():
+            av_df[col] = [val]
 
         return av_df
 
@@ -178,10 +189,19 @@ def trial_average(trial_data, condition, ref_field=None):
         groups = condition
 
     # group by the condition and call trial_average without a condition on the sub-dataframes
-    return pd.DataFrame.from_dict(
-        {a: trial_average(b, None) for (a, b) in trial_data.groupby(groups)},
-        orient="index",
-    ).drop("trial_id", axis="columns")
+    # av_df = pd.DataFrame.from_dict(
+    #    {a: trial_average(b, None) for (a, b) in trial_data.groupby(groups)},
+    #    orient="index",
+    # )
+    av_df = pd.concat(
+        {a: trial_average(b, None, ref_field) for (a, b) in trial_data.groupby(groups)},
+        join="inner",
+    ).droplevel(-1)
+
+    if "trial_id" in av_df.columns:
+        av_df.drop(columns="trial_id", inplace=True)
+
+    return av_df
 
 
 @utils.copy_td
