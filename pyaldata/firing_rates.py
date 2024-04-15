@@ -4,8 +4,9 @@ from . import smoothing
 from . import utils
 from . import extract_signals
 
+
 @utils.copy_td
-def add_firing_rates(trial_data, method, std=None, hw=None, win=None, backend='convolve1d'):
+def add_firing_rates(trial_data, method, std=None, hw=None, win=None, backend="convolve1d"):
     """
     Add firing rate fields calculated from spikes fields
 
@@ -33,9 +34,11 @@ def add_firing_rates(trial_data, method, std=None, hw=None, win=None, backend='c
     """
     spike_fields = [name for name in trial_data.columns.values if name.endswith("_spikes")]
     rate_suffix = "_rates"
-    rate_fields = [utils.remove_suffix(name, "_spikes") + rate_suffix for name in spike_fields]
+    rate_fields = [
+        utils.remove_suffix(name, "_spikes") + rate_suffix for name in spike_fields
+    ]
 
-    bin_size = trial_data['bin_size'].values[0]
+    bin_size = trial_data["bin_size"].values[0]
 
     if method == "smooth":
         if win is None:
@@ -43,7 +46,7 @@ def add_firing_rates(trial_data, method, std=None, hw=None, win=None, backend='c
                 if std is None:
                     std = 0.05
             else:
-                assert (std is None), "only give hw or std"
+                assert std is None, "only give hw or std"
 
                 std = smoothing.hw_to_std(hw)
 
@@ -53,13 +56,15 @@ def add_firing_rates(trial_data, method, std=None, hw=None, win=None, backend='c
             return smoothing.smooth_data(spikes, win=win, backend=backend) / bin_size
 
     elif method == "bin":
-        assert all([x is None for x in [std, hw, win]]), "If binning is used, then std, hw, and win have no effect, so don't provide them."
+        assert all(
+            [x is None for x in [std, hw, win]]
+        ), "If binning is used, then std, hw, and win have no effect, so don't provide them."
 
         def get_rate(spikes):
             return spikes / bin_size
 
     # calculate rates for every spike field
-    for (spike_field, rate_field) in zip(spike_fields, rate_fields):
+    for spike_field, rate_field in zip(spike_fields, rate_fields):
         trial_data[rate_field] = [get_rate(spikes) for spikes in trial_data[spike_field]]
 
     return trial_data
@@ -84,28 +89,41 @@ def get_average_firing_rates(trial_data, signal, divide_by_bin_size=None):
     np.array with the average firing rates
     shape (N, ) where N is the number of neurons in signal
     """
-    assert len(set(trial_data.bin_size)) == 1, "Function assumes that every trial has the same bin size."
+    assert (
+        len(set(trial_data.bin_size)) == 1
+    ), "Function assumes that every trial has the same bin size."
 
     if signal.endswith("spikes"):
         if divide_by_bin_size is None:
-            utils.warnings.warn("Assuming spikes are actually spikes and dividing by bin size.")
+            utils.warnings.warn(
+                "Assuming spikes are actually spikes and dividing by bin size."
+            )
             divide_by_bin_size = True
     elif signal.endswith("rates"):
         if divide_by_bin_size is None:
-            utils.warnings.warn("Assuming rates are already in Hz and don't have to divide by bin size.")
+            utils.warnings.warn(
+                "Assuming rates are already in Hz and don't have to divide by bin size."
+            )
             divide_by_bin_size = False
     else:
         if divide_by_bin_size is None:
-            raise ValueError(f"Please specify divide_by_bin_size. Could not determine it automatically.")
+            raise ValueError(
+                f"Please specify divide_by_bin_size. Could not determine it automatically."
+            )
 
     if divide_by_bin_size:
-        return np.mean(extract_signals.concat_trials(trial_data, signal), axis=0) / trial_data['bin_size'].values[0]
+        return (
+            np.mean(extract_signals.concat_trials(trial_data, signal), axis=0)
+            / trial_data["bin_size"].values[0]
+        )
     else:
         return np.mean(extract_signals.concat_trials(trial_data, signal), axis=0)
 
 
 @utils.copy_td
-def remove_low_firing_neurons(trial_data, signal, threshold, divide_by_bin_size=None, verbose=False):
+def remove_low_firing_neurons(
+    trial_data, signal, threshold, divide_by_bin_size=None, verbose=False
+):
     """
     Remove neurons from signal whose average firing rate
     across all trials is lower than a threshold

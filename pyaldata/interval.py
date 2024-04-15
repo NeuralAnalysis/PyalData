@@ -4,11 +4,24 @@ from . import utils
 from . import tools
 
 import warnings
+
 warnings.simplefilter("always", UserWarning)
 
 
 @utils.copy_td
-def restrict_to_interval(trial_data, start_point_name=None, end_point_name=None, rel_start=0, rel_end=0, before=None, after=None, epoch_fun=None, warn_per_trial=False, reset_index=True, ref_field=None):
+def restrict_to_interval(
+    trial_data,
+    start_point_name=None,
+    end_point_name=None,
+    rel_start=0,
+    rel_end=0,
+    before=None,
+    after=None,
+    epoch_fun=None,
+    warn_per_trial=False,
+    reset_index=True,
+    ref_field=None,
+):
     """
     Restrict time-varying fields to an interval around a time point or between two time points (inclusive on both ends)
 
@@ -53,7 +66,9 @@ def restrict_to_interval(trial_data, start_point_name=None, end_point_name=None,
         warnings.warn("'after' is deprecated. Use 'rel_end' instead.")
         rel_end = after
 
-    assert (start_point_name is None) ^ (epoch_fun is None), "Give either start_point_name or epoch_fun."
+    assert (start_point_name is None) ^ (
+        epoch_fun is None
+    ), "Give either start_point_name or epoch_fun."
 
     idx_fields = [col for col in trial_data.columns.values if col.startswith("idx")]
     time_fields = utils.get_time_varying_fields(trial_data, ref_field)
@@ -63,32 +78,35 @@ def restrict_to_interval(trial_data, start_point_name=None, end_point_name=None,
         epoch_fun = generate_epoch_fun(start_point_name, end_point_name, rel_start, rel_end)
 
     # check in which trials the indexing works properly
-    kept_trials_mask = np.array([_slice_in_trial(trial, epoch_fun(trial), warn_per_trial)
-                                 for (i, trial) in trial_data.iterrows()]).astype(bool)
+    kept_trials_mask = np.array(
+        [
+            _slice_in_trial(trial, epoch_fun(trial), warn_per_trial)
+            for (i, trial) in trial_data.iterrows()
+        ]
+    ).astype(bool)
     # warn about dropping the problematic trials
     if np.any(~kept_trials_mask):
-        warnings.warn(f"""Dropping the trials with the following IDs because of invalid time indexing. For more information, try warn_per_trial=True
+        warnings.warn(
+            f"""Dropping the trials with the following IDs because of invalid time indexing. For more information, try warn_per_trial=True
 
-        {trial_data.trial_id.values[~kept_trials_mask]}""", stacklevel=3)
+        {trial_data.trial_id.values[~kept_trials_mask]}""",
+            stacklevel=3,
+        )
 
     # only keep trials in which the indexing works properly
     trial_data = tools.select_trials(trial_data, kept_trials_mask, reset_index)
 
     # cut time varying signals
     trim_temp = {
-        col: extract_interval_from_signal(trial_data, col, epoch_fun)
-        for col in time_fields
+        col: extract_interval_from_signal(trial_data, col, epoch_fun) for col in time_fields
     }
     trial_data = trial_data.assign(**trim_temp)
 
     # adjust idx fields
     def _adjust_field(val, new_T):
         if isinstance(val, (np.ndarray, list)):
-            return np.array([np.nan
-                             if (idx < 0 or idx > new_T)
-                             else idx
-                             for idx in val])
-        elif ((val < 0) or (val > new_T)):
+            return np.array([np.nan if (idx < 0 or idx > new_T) else idx for idx in val])
+        elif (val < 0) or (val > new_T):
             return np.nan
         else:
             return val
@@ -97,11 +115,15 @@ def restrict_to_interval(trial_data, start_point_name=None, end_point_name=None,
     zero_points = [epoch_fun(trial).start for (i, trial) in trial_data.iterrows()]
 
     for col in idx_fields:
-        trial_data[col] = [idx - zero_point for (idx, zero_point) in zip(trial_data[col], zero_points)]
+        trial_data[col] = [
+            idx - zero_point for (idx, zero_point) in zip(trial_data[col], zero_points)
+        ]
 
         # set indices that are now invalid (i.e. not in the restricted interval) to nan
-        trial_data[col] = [_adjust_field(idx, new_T)
-                           for (idx, new_T) in zip(trial_data[col], new_time_lengths)]
+        trial_data[col] = [
+            _adjust_field(idx, new_T)
+            for (idx, new_T) in zip(trial_data[col], new_time_lengths)
+        ]
 
     return trial_data
 
@@ -224,9 +246,13 @@ def generate_epoch_fun(start_point_name, end_point_name=None, rel_start=0, rel_e
         function that can be used to extract the interval from a trial
     """
     if end_point_name is None:
-        epoch_fun = lambda trial: slice_around_point(trial, start_point_name, -rel_start, rel_end)
+        epoch_fun = lambda trial: slice_around_point(
+            trial, start_point_name, -rel_start, rel_end
+        )
     else:
-        epoch_fun = lambda trial: slice_between_points(trial, start_point_name, end_point_name, -rel_start, rel_end)
+        epoch_fun = lambda trial: slice_between_points(
+            trial, start_point_name, end_point_name, -rel_start, rel_end
+        )
 
     return epoch_fun
 
@@ -273,22 +299,30 @@ def _slice_in_trial(trial, sl, warn=False):
 
     is_inside = True
 
-    if (sl.start < 0):
+    if sl.start < 0:
         is_inside = False
         if warn:
-            warnings.warn(f"Invalid time index on trial with ID {trial.trial_id}. Trying to access index {sl.start} < 0")
-    if (sl.stop > T):
+            warnings.warn(
+                f"Invalid time index on trial with ID {trial.trial_id}. Trying to access index {sl.start} < 0"
+            )
+    if sl.stop > T:
         is_inside = False
         if warn:
-            warnings.warn(f"Invalid time index on trial with ID {trial.trial_id}. Trying to access index {sl.stop-1} >= {T}")
+            warnings.warn(
+                f"Invalid time index on trial with ID {trial.trial_id}. Trying to access index {sl.stop-1} >= {T}"
+            )
 
     if not np.isfinite(sl.start):
         is_inside = False
         if warn:
-            warnings.warn(f"Invalid time index on trial with ID {trial.trial_id}. Starting point is {sl.start}")
+            warnings.warn(
+                f"Invalid time index on trial with ID {trial.trial_id}. Starting point is {sl.start}"
+            )
     if not np.isfinite(sl.stop):
         is_inside = False
         if warn:
-            warnings.warn(f"Invalid time index on trial with ID {trial.trial_id}. End point is {sl.stop}")
+            warnings.warn(
+                f"Invalid time index on trial with ID {trial.trial_id}. End point is {sl.stop}"
+            )
 
     return is_inside

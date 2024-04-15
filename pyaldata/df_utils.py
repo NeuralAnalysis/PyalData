@@ -2,6 +2,7 @@ import pandas as pd
 
 from . import utils
 
+
 def concat_TDs(frames, re_index=True):
     """
     Concatenate trial_data structures.
@@ -46,7 +47,7 @@ def rename_fields(trial_data, fields):
     """
 
     for f in fields.keys():
-        if (f not in trial_data):
+        if f not in trial_data:
             raise ValueError(f"{f} field does not exist in trial data")
 
     return trial_data.rename(columns=fields)
@@ -70,9 +71,9 @@ def copy_fields(trial_data, fields):
     trial_data: pd.DataFrame
         data with the copied fields with the new name
     """
-    #Check if all fields exist
+    # Check if all fields exist
     for f in fields.keys():
-        if (f not in trial_data):
+        if f not in trial_data:
             raise ValueError(f"{f} field does not exist in trial data")
 
     for f in fields.keys():
