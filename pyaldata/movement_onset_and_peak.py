@@ -1,10 +1,9 @@
 import warnings
-import numpy as np
 
+import numpy as np
 from scipy.signal import find_peaks
 
-from . import utils
-from . import tools
+from . import signals, utils
 
 
 def get_onset_idx(s, min_ds=1.9, s_thresh=10, peak_divisor=2, method="peaks", debug=False):
@@ -21,7 +20,7 @@ def get_onset_idx(s, min_ds=1.9, s_thresh=10, peak_divisor=2, method="peaks", de
     s_thresh : float, default 10
         if using thresholding, returns the first index where the signal reaches this threshold
     peak_divisor : float, default 2
-        what fraction of the peak acceleration to reach before peak acceleration 
+        what fraction of the peak acceleration to reach before peak acceleration
     method : string, default 'peaks'
         possible values: "peaks", "Matt", "threshold"
             peaks: find peaks of the acceleration using scipy.signal.find_peaks
@@ -35,7 +34,12 @@ def get_onset_idx(s, min_ds=1.9, s_thresh=10, peak_divisor=2, method="peaks", de
     on_idx : int or np.nan
         index of the onset or NaN if none is found
     """
-    assert method.lower() in ['peaks', 'scipy', 'matt', 'threshold'], "method has to be one of 'peaks', 'scipy', 'matt', 'threshold']"
+    assert method.lower() in [
+        "peaks",
+        "scipy",
+        "matt",
+        "threshold",
+    ], "method has to be one of 'peaks', 'scipy', 'matt', 'threshold']"
 
     # I'm not sure what this is
     abs_acc_thresh = np.nan
@@ -43,20 +47,20 @@ def get_onset_idx(s, min_ds=1.9, s_thresh=10, peak_divisor=2, method="peaks", de
     # initialize to nan
     on_idx = np.nan
 
-    if method.lower() in ['peaks', 'matt']:
+    if method.lower() in ["peaks", "matt"]:
         # find peaks of the acceleration
         ds = np.insert(np.diff(s), 0, 0)
 
-        if method.lower() == 'peaks':
+        if method.lower() == "peaks":
             peaks = find_peaks(ds)[0]
         else:
             dds = np.insert(np.diff(ds), 0, 0)
-            peaks = np.append((dds[:-1]>0) & (dds[1:]<0), False)
+            peaks = np.append((dds[:-1] > 0) & (dds[1:] < 0), False)
             peaks = np.nonzero(peaks)[0]
-        
+
         # keep only those above a threshold
         mvt_peak = peaks[ds[peaks] > min_ds]
-        
+
         # if there are peaks
         if not len(mvt_peak) == 0:
             # take the first one
@@ -66,25 +70,33 @@ def get_onset_idx(s, min_ds=1.9, s_thresh=10, peak_divisor=2, method="peaks", de
                 thresh = ds[mvt_peak] / peak_divisor
             else:
                 thresh = abs_acc_thresh
-                
+
             # initiation is the last time point where ds is below threshold before the peak
             on_idx = [i for i in range(mvt_peak) if ds[i] < thresh][-1]
 
     # if thresholding is chosen or peak finding didn't work, do thresholding
     if np.isnan(on_idx):
         if debug:
-            print('using thresholding')
+            print("using thresholding")
 
         if len(np.nonzero((s > s_thresh))[0]) != 0:
             on_idx = np.nonzero((s > s_thresh))[0][0]
 
-        if np.isnan(on_idx): # usually means it never crosses threshold
+        if np.isnan(on_idx):  # usually means it never crosses threshold
             warnings.warn("Could not identify movement onset")
 
     return on_idx
 
 
-def get_movement_onset(trial, start="idx_go_cue", min_ds=1.9, s_thresh=10, peak_divisor=2, method="peaks", debug=False):
+def get_movement_onset(
+    trial,
+    start="idx_go_cue",
+    min_ds=1.9,
+    s_thresh=10,
+    peak_divisor=2,
+    method="peaks",
+    debug=False,
+):
     """
     Get index of movement onset in the trial
 
@@ -101,7 +113,7 @@ def get_movement_onset(trial, start="idx_go_cue", min_ds=1.9, s_thresh=10, peak_
     s_thresh : float, default 10
         if using thresholding, returns the first index where the signal reaches this threshold
     peak_divisor : float, default 2
-        what fraction of the peak acceleration to reach before peak acceleration 
+        what fraction of the peak acceleration to reach before peak acceleration
     method : string, default 'peaks'
         possible values: "peaks", "Matt", "threshold"
             peaks: find peaks of the acceleration using scipy.signal.find_peaks
@@ -120,7 +132,9 @@ def get_movement_onset(trial, start="idx_go_cue", min_ds=1.9, s_thresh=10, peak_
     else:
         start_idx = int(start)
 
-    return start_idx + get_onset_idx(trial.vel_norm[start_idx:], min_ds, s_thresh, peak_divisor, method, debug)
+    return start_idx + get_onset_idx(
+        trial.vel_norm[start_idx:], min_ds, s_thresh, peak_divisor, method, debug
+    )
 
 
 @utils.copy_td
@@ -140,13 +154,14 @@ def add_movement_onset(trial_data, **kwargs):
     -------
     copy of trial_data with "idx_movement_on" field added
     """
-    if 'vel' not in trial_data.columns:
-        trial_data = tools.add_gradient(trial_data, 'pos', 'vel', True)
-    if 'vel_norm' not in trial_data.columns:
-        trial_data = tools.add_norm(trial_data, 'vel')
+    if "vel" not in trial_data.columns:
+        trial_data = signals.add_gradient(trial_data, "pos", "vel", True)
+    if "vel_norm" not in trial_data.columns:
+        trial_data = signals.add_norm(trial_data, "vel")
 
-    trial_data["idx_movement_on"] = trial_data.apply(lambda trial: get_movement_onset(trial, **kwargs),
-                                                     axis=1)
+    trial_data["idx_movement_on"] = trial_data.apply(
+        lambda trial: get_movement_onset(trial, **kwargs), axis=1
+    )
 
     return trial_data
 
@@ -196,8 +211,9 @@ def add_peak_speed_idx(trial_data, start="idx_go_cue"):
     -------
     copy of trial_data with "idx_peak_speed" added
     """
-    trial_data["idx_peak_speed"] = trial_data.apply(lambda trial: get_peak_speed_idx(trial),
-                                                     axis=1)
+    trial_data["idx_peak_speed"] = trial_data.apply(
+        lambda trial: get_peak_speed_idx(trial), axis=1
+    )
 
     return trial_data
 
@@ -246,7 +262,6 @@ def add_peak_speed(trial_data, start="idx_go_cue"):
     -------
     copy of trial_data with "peak_speed" added
     """
-    trial_data["peak_speed"] = trial_data.apply(lambda trial: get_peak_speed(trial),
-                                                axis=1)
+    trial_data["peak_speed"] = trial_data.apply(lambda trial: get_peak_speed(trial), axis=1)
 
     return trial_data
