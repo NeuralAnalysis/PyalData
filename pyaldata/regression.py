@@ -60,7 +60,15 @@ def apply_regressor_model(trial_data, model, signal, out_fieldname):
 
 
 @utils.copy_td
-def regress(trial_data, model, input_signal, output_signal, out_fieldname, train_indices=None, return_model=False):
+def regress(
+    trial_data,
+    model,
+    input_signal,
+    output_signal,
+    out_fieldname,
+    train_indices=None,
+    return_model=False,
+):
     """
     Fit and apply a regression model to predict one signal from another
 
@@ -85,7 +93,9 @@ def regress(trial_data, model, input_signal, output_signal, out_fieldname, train
     -------
     trial_data with out_fieldname added
     """
-    model = fit_regressor_model(trial_data, model, input_signal, output_signal, train_indices)
+    model = fit_regressor_model(
+        trial_data, model, input_signal, output_signal, train_indices
+    )
     trial_data = apply_regressor_model(trial_data, model, input_signal, out_fieldname)
 
     if return_model:
@@ -114,8 +124,10 @@ def expand_field_in_time(trial_data, field, out_fieldname=None):
     """
     if out_fieldname is None:
         out_fieldname = field + "_ext"
-        
-    trial_data[out_fieldname] = [trial[field] * np.ones(utils.get_trial_length(trial))
-                                 for (i, trial) in trial_data.iterrows()]
+
+    trial_data[out_fieldname] = [
+        trial[field] * np.ones(utils.get_trial_length(trial))
+        for (i, trial) in trial_data.iterrows()
+    ]
 
     return trial_data

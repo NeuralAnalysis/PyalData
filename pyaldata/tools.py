@@ -1,9 +1,10 @@
+import warnings
+
 import numpy as np
 import pandas as pd
 
-from . import utils
-from . import integrity_checks
-import warnings
+from . import integrity_checks, utils
+
 warnings.simplefilter("always", UserWarning)
 
 
@@ -19,7 +20,7 @@ def combine_time_bins(trial_data, n_bins, extra_time_fields=None, ref_field=None
         - idx
         - fields found by utils.get_time_varying_fields
     If you want to include others, specify extra_time_fields
-    
+
     Parameters
     ----------
     trial_data : pd.DataFrame
@@ -41,11 +42,16 @@ def combine_time_bins(trial_data, n_bins, extra_time_fields=None, ref_field=None
     idx_fields = [col for col in trial_data.columns if col.startswith("idx")]
 
     # check if there are any time-varying fields left
-    other_time_fields = [col for col in utils.get_time_varying_fields(trial_data, ref_field)
-                         if (col not in spike_fields) and (col not in rate_fields)]
+    other_time_fields = [
+        col
+        for col in utils.get_time_varying_fields(trial_data, ref_field)
+        if (col not in spike_fields) and (col not in rate_fields)
+    ]
 
     if len(trial_data.bin_size.unique()) != 1:
-        raise NotImplementedError("implementation assumes that every trial has the same bin_size")
+        raise NotImplementedError(
+            "implementation assumes that every trial has the same bin_size"
+        )
 
     trial_data["bin_size"] = n_bins * trial_data["bin_size"]
 
@@ -53,14 +59,13 @@ def combine_time_bins(trial_data, n_bins, extra_time_fields=None, ref_field=None
     for col in idx_fields:
         trial_data[col] = [idx // n_bins for idx in trial_data[col]]
 
-
     # rebin time-varying fields
     def rebin_array(arr, red_fun):
         if arr.ndim == 1:
             arr = arr.reshape(-1, 1)
 
         T, N = arr.shape
-        T = (T // n_bins) * n_bins # throw away last bins
+        T = (T // n_bins) * n_bins  # throw away last bins
 
         arr = arr[:T, :]
         arr = arr.reshape(int(T / n_bins), n_bins, N)
@@ -82,8 +87,6 @@ def combine_time_bins(trial_data, n_bins, extra_time_fields=None, ref_field=None
     for col in rate_fields:
         trial_data[col] = [rebin_array(arr, np.mean) for arr in trial_data[col]]
 
-
-
     # hopefully all time-varying fields were caught but the user can also provide some
     if extra_time_fields is not None:
         if isinstance(extra_time_fields, str):
@@ -95,7 +98,6 @@ def combine_time_bins(trial_data, n_bins, extra_time_fields=None, ref_field=None
     # rebin the time-varying fields left
     for col in other_time_fields:
         trial_data[col] = [rebin_array(arr, np.mean) for arr in trial_data[col]]
-
 
     return trial_data
 
@@ -112,7 +114,7 @@ def merge_signals(trial_data, signals, out_fieldname):
         name of the fields we want to merge
     out_fieldname : str
         name of the field in which to store the output
-        
+
     Returns
     -------
     trial_data : pd.DataFrame
@@ -121,13 +123,15 @@ def merge_signals(trial_data, signals, out_fieldname):
     if isinstance(signals, str):
         raise ValueError("signals should be a list of fields")
     if len(signals) == 1:
-        raise ValueError(f"This function is for merging multiple signals. Only got {signals[0]}")
+        raise ValueError(
+            f"This function is for merging multiple signals. Only got {signals[0]}"
+        )
 
     trial_data[out_fieldname] = [np.column_stack(row) for row in trial_data[signals].values]
-    
+
     return trial_data
-    
-    
+
+
 def trial_average(trial_data, condition, ref_field=None):
     """
     Trial-average signals, optionally after grouping trials by some conditions
@@ -150,19 +154,21 @@ def trial_average(trial_data, condition, ref_field=None):
     -------
     pd.DataFrame with the fields averaged and the trial_id column dropped
     """
-    assert integrity_checks.trials_are_same_length(trial_data, ref_field), "Trials should have the same length"
+    assert integrity_checks.trials_are_same_length(
+        trial_data, ref_field
+    ), "Trials should have the same length"
 
     if condition is None:
+        # keep string fields if they are the same on every trial
+        for col in utils.get_string_fields(trial_data):
+            if trial_data[col].unique().size == 1:
+                av_df[col] = trial_data[col].iloc[0]
+
         av_df = trial_data.mean()
 
         # calculate the mean of array fields one by one
         for col in utils.get_array_fields(trial_data):
             av_df[col] = trial_data[col].mean()
-
-        # keep string fields if they are the same on every trial
-        for col in utils.get_string_fields(trial_data):
-            if trial_data[col].unique().size == 1:
-                av_df[col] = trial_data[col].iloc[0]
 
         return av_df
 
@@ -172,16 +178,17 @@ def trial_average(trial_data, condition, ref_field=None):
         groups = condition
 
     # group by the condition and call trial_average without a condition on the sub-dataframes
-    return (pd.DataFrame.from_dict({a : trial_average(b, None) for (a, b) in trial_data.groupby(groups)},
-                                   orient="index")
-                        .drop("trial_id", axis="columns"))
+    return pd.DataFrame.from_dict(
+        {a: trial_average(b, None) for (a, b) in trial_data.groupby(groups)},
+        orient="index",
+    ).drop("trial_id", axis="columns")
 
 
 @utils.copy_td
 def subtract_cross_condition_mean(trial_data, cond_idx=None, ref_field=None):
     """
     Find mean across all trials for each time point and subtract it from each trial.
-    
+
     Parameters
     ----------
     trial_data : pd.DataFrame
@@ -201,13 +208,15 @@ def subtract_cross_condition_mean(trial_data, cond_idx=None, ref_field=None):
 
     time_fields = utils.get_time_varying_fields(trial_data, ref_field)
     for col in time_fields:
-        assert len(set([arr.shape for arr in trial_data[col]])) == 1, f"Trials should have the same time coordinates in order to average."
+        assert (
+            len(set([arr.shape for arr in trial_data[col]])) == 1
+        ), f"Trials should have the same time coordinates in order to average."
 
     for col in time_fields:
         mean_act = np.mean(trial_data.loc[cond_idx, col], axis=0)
         trial_data[col] = [arr - mean_act for arr in trial_data[col]]
     return trial_data
-        
+
 
 @utils.copy_td
 def select_trials(trial_data, query, reset_index=True):
@@ -258,10 +267,10 @@ def select_trials(trial_data, query, reset_index=True):
         return trial_data.loc[trials_to_keep, :]
 
 
-def keep_common_trials(df_a, df_b, join_field='trial_id'):
+def keep_common_trials(df_a, df_b, join_field="trial_id"):
     """
     Keep only trials with ID that are found in both data sets
-    
+
     Parameters
     ----------s
     df_a : pd.DataFrame
@@ -270,7 +279,7 @@ def keep_common_trials(df_a, df_b, join_field='trial_id'):
         second data set in trial data format
     join_field : str, optional, default trial_id
         field based on which trials are matched to each other
-        
+
     Returns
     -------
     (subset_a, subset_b) : tuple of dataframes
@@ -278,6 +287,5 @@ def keep_common_trials(df_a, df_b, join_field='trial_id'):
     common_ids = np.intersect1d(df_a[join_field].values, df_b[join_field].values)
     subset_a = select_trials(df_a, lambda trial: trial[join_field] in common_ids)
     subset_b = select_trials(df_b, lambda trial: trial[join_field] in common_ids)
-    
-    return subset_a, subset_b
 
+    return subset_a, subset_b

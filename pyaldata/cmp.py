@@ -1,5 +1,6 @@
 import pandas as pd
 
+
 def remove_cmp_formatting(s):
     """
     Used in read_cmp() to remove formatting in .cmp file
@@ -13,7 +14,7 @@ def remove_cmp_formatting(s):
     -------
     list of strings
     """
-    for r in (('\t', ' '), ('\n', ''), ('elec', '')):
+    for r in (("\t", " "), ("\n", ""), ("elec", "")):
         s = s.replace(*r)
     return s.split()
 
@@ -34,11 +35,20 @@ def read_cmp(file_path):
     """
     # Open file, remove comments and remove other formatting we don't need
     with open(file_path) as f:
-        temp = [line for line in f if not line.startswith('//')]
+        temp = [line for line in f if not line.startswith("//")]
     clean_lsts = [remove_cmp_formatting(l) for l in temp[1:]]
-    df = pd.DataFrame(clean_lsts, columns=['array_col', 'array_row', 'channel_num', 'within_channel_num', 'global_enum']).dropna()
+    df = pd.DataFrame(
+        clean_lsts,
+        columns=[
+            "array_col",
+            "array_row",
+            "channel_num",
+            "within_channel_num",
+            "global_enum",
+        ],
+    ).dropna()
 
     # Convert columns to integers - errors='igore' return the column unchanged if it cannot be converted to a numeric type
-    df_array = df.apply(pd.to_numeric, errors='ignore')
+    df_array = df.apply(pd.to_numeric, errors="ignore")
 
     return df_array

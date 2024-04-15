@@ -32,16 +32,16 @@ def reverse_concat(X, df):
     """
     Split a concatenated signal X into chunks corresponding to each trial of df.
     ~ reverse concat_trials
-    
+
     See also split_array
-    
+
     Parameters
     ----------
     X : np.array
         concatenated signal
     df : pd.DataArray
         dataframe from which the signal was extracted by concatenating the trials
-        
+
     Returns
     -------
     list of subarrays
@@ -102,8 +102,10 @@ def get_sig_by_trial(trial_data, signals, trial_indices=None):
     if trial_indices is None:
         trial_indices = trial_data.index
 
-    return np.stack([np.column_stack(row) for row in trial_data.loc[trial_indices, signals].values],
-                    axis=-1)
+    return np.stack(
+        [np.column_stack(row) for row in trial_data.loc[trial_indices, signals].values],
+        axis=-1,
+    )
 
 
 def stack_time_average(trial_data, signal):

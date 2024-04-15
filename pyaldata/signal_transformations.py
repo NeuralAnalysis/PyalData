@@ -43,7 +43,6 @@ def center(arr):
 
 @utils.copy_td
 def center_signal(trial_data, signals, train_trials=None):
-
     """
     Center signal by removing the mean across time
 
@@ -154,10 +153,11 @@ def sqrt_transform_signal(trial_data, signals, train_trials=None):
     for signal in signals:
         for s in trial_data[signal]:
             if (s < 0).any():
-                raise ValueError("signal cannot contain negative values when square-root transforming")
+                raise ValueError(
+                    "signal cannot contain negative values when square-root transforming"
+                )
 
         trial_data[signal] = [np.sqrt(s) for s in trial_data[signal]]
-
 
     return trial_data
 
@@ -295,15 +295,17 @@ def transform_signal(trial_data, signals, transformations, train_trials=None, **
     trial_data : pd.DataFrame
         data with the given field transformed
     """
-    method_dict = {"center" : center_signal,
-                   "center_normalize" : center_normalize_signal,
-                   "zero_normalize" : zero_normalize_signal,
-                   "sqrt_transform" : sqrt_transform_signal,
-                   "sqrt" : sqrt_transform_signal,
-                   "z_score" : z_score_signal,
-                   "z-score" : z_score_signal,
-                   "zero_normalize" : zero_normalize_signal,
-                   "soft_normalize" : soft_normalize_signal}
+    method_dict = {
+        "center": center_signal,
+        "center_normalize": center_normalize_signal,
+        "zero_normalize": zero_normalize_signal,
+        "sqrt_transform": sqrt_transform_signal,
+        "sqrt": sqrt_transform_signal,
+        "z_score": z_score_signal,
+        "z-score": z_score_signal,
+        "zero_normalize": zero_normalize_signal,
+        "soft_normalize": soft_normalize_signal,
+    }
 
     if isinstance(transformations, str):
         transformations = [transformations]

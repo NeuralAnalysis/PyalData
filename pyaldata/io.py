@@ -3,6 +3,7 @@ from . import data_cleaning
 import pandas as pd
 import scipy.io
 
+
 def mat2dataframe(path, shift_idx_fields, td_name=None):
     """
     Load a trial_data .mat file and turn it into a pandas DataFrame
