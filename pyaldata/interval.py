@@ -1,26 +1,27 @@
-import numpy as np
-
-from . import utils
-from . import tools
-
 import warnings
+from typing import Callable
+
+import numpy as np
+import pandas as pd
+
+from . import tools, utils
 
 warnings.simplefilter("always", UserWarning)
 
 
 @utils.copy_td
 def restrict_to_interval(
-    trial_data,
-    start_point_name=None,
-    end_point_name=None,
-    rel_start=0,
-    rel_end=0,
-    before=None,
-    after=None,
-    epoch_fun=None,
-    warn_per_trial=False,
-    reset_index=True,
-    ref_field=None,
+    trial_data: pd.DataFrame,
+    start_point_name: str = None,
+    end_point_name: str = None,
+    rel_start: int = 0,
+    rel_end: int = 0,
+    before: int = None,
+    after: int = None,
+    epoch_fun: Callable[[pd.Series], slice] = None,
+    warn_per_trial: bool = False,
+    reset_index: bool = True,
+    ref_field: str = None,
 ):
     """
     Restrict time-varying fields to an interval around a time point or between two time points (inclusive on both ends)
@@ -128,7 +129,7 @@ def restrict_to_interval(
     return trial_data
 
 
-def slice_around_index(idx, before, after):
+def slice_around_index(idx: int, before: int, after: int) -> slice:
     """
     Return a slice around an index
     Length will be before + after + 1
@@ -157,7 +158,7 @@ def slice_around_index(idx, before, after):
     return slice(start, end)
 
 
-def slice_around_point(trial, point_name, before, after):
+def slice_around_point(trial: pd.Series, point_name: str, before: int, after: int) -> slice:
     """
     Return a slice around a time point in the trial
     Length will be before + after + 1
@@ -189,7 +190,9 @@ def slice_around_point(trial, point_name, before, after):
     return slice(start, end)
 
 
-def slice_between_points(trial, start_point_name, end_point_name, before, after):
+def slice_between_points(
+    trial: pd.DataFrame, start_point_name: str, end_point_name: str, before: int, after: int
+) -> slice:
     """
     Return a slice that starts before start_point_name and ends after end_point_name
 
@@ -222,7 +225,9 @@ def slice_between_points(trial, start_point_name, end_point_name, before, after)
     return slice(start, end)
 
 
-def generate_epoch_fun(start_point_name, end_point_name=None, rel_start=0, rel_end=0):
+def generate_epoch_fun(
+    start_point_name: str, end_point_name: str = None, rel_start: int = 0, rel_end: int = 0
+) -> Callable[[pd.Series], slice]:
     """
     Return a function that slices a trial around/between time points
 
@@ -242,22 +247,28 @@ def generate_epoch_fun(start_point_name, end_point_name=None, rel_start=0, rel_e
 
     Returns
     -------
-    epoch_fun : function
+    generated_epoch_fun : function
         function that can be used to extract the interval from a trial
     """
     if end_point_name is None:
-        epoch_fun = lambda trial: slice_around_point(
-            trial, start_point_name, -rel_start, rel_end
-        )
+
+        def generated_epoch_fun(trial):
+            return slice_around_point(trial, start_point_name, -rel_start, rel_end)
     else:
-        epoch_fun = lambda trial: slice_between_points(
-            trial, start_point_name, end_point_name, -rel_start, rel_end
-        )
 
-    return epoch_fun
+        def generated_epoch_fun(trial):
+            return slice_between_points(
+                trial, start_point_name, end_point_name, -rel_start, rel_end
+            )
+
+    return generated_epoch_fun
 
 
-def extract_interval_from_signal(trial_data, signal, epoch_fun):
+def extract_interval_from_signal(
+    trial_data: pd.DataFrame,
+    signal: str,
+    epoch_fun: Callable[[pd.Series], slice],
+) -> list[np.ndarray]:
     """
     Extract an interval from a time-varying signal in the dataset
 
@@ -277,7 +288,7 @@ def extract_interval_from_signal(trial_data, signal, epoch_fun):
     return [trial[signal][epoch_fun(trial), ...] for (i, trial) in trial_data.iterrows()]
 
 
-def _slice_in_trial(trial, sl, warn=False):
+def _slice_in_trial(trial: pd.Series, sl: slice, warn: bool = False) -> bool:
     """
     Check if the slice is within the trial's time indices
 

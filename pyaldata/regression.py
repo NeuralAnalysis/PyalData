@@ -1,10 +1,18 @@
-from . import utils
-from . import extract_signals
+from typing import Sequence
 
 import numpy as np
+import pandas as pd
+
+from . import extract_signals, utils
 
 
-def fit_regressor_model(trial_data, model, input_signal, output_signal, train_indices=None):
+def fit_regressor_model(
+    trial_data: pd.DataFrame,
+    model,
+    input_signal: str,
+    output_signal: str,
+    train_indices: Sequence[int] = None,
+):
     """
     Fit a regression model that predicts one signal from another
 
@@ -34,7 +42,9 @@ def fit_regressor_model(trial_data, model, input_signal, output_signal, train_in
 
 
 @utils.copy_td
-def apply_regressor_model(trial_data, model, signal, out_fieldname):
+def apply_regressor_model(
+    trial_data: pd.DataFrame, model, signal: str, out_fieldname: str
+) -> pd.DataFrame:
     """
     Apply a fitted regression model to all trials
 
@@ -61,13 +71,13 @@ def apply_regressor_model(trial_data, model, signal, out_fieldname):
 
 @utils.copy_td
 def regress(
-    trial_data,
+    trial_data: pd.DataFrame,
     model,
-    input_signal,
-    output_signal,
-    out_fieldname,
-    train_indices=None,
-    return_model=False,
+    input_signal: str,
+    output_signal: str,
+    out_fieldname: str,
+    train_indices: Sequence[int] = None,
+    return_model: bool = False,
 ):
     """
     Fit and apply a regression model to predict one signal from another
@@ -105,7 +115,7 @@ def regress(
 
 
 @utils.copy_td
-def expand_field_in_time(trial_data, field, out_fieldname=None):
+def expand_field_in_time(trial_data: pd.DataFrame, field: str, out_fieldname: str = None):
     """
     Expand scalar field to a vector that can be used for prediction per time point.
 

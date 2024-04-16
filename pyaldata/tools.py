@@ -1,5 +1,5 @@
 import warnings
-from typing import Optional
+from typing import Optional, Sequence
 
 import numpy as np
 import pandas as pd
@@ -10,7 +10,12 @@ warnings.simplefilter("always", UserWarning)
 
 
 @utils.copy_td
-def combine_time_bins(trial_data, n_bins, extra_time_fields=None, ref_field=None):
+def combine_time_bins(
+    trial_data: pd.DataFrame,
+    n_bins: int,
+    extra_time_fields: list[str] = None,
+    ref_field: str = None,
+) -> pd.DataFrame:
     """
     Re-bin data by combining n_bins timesteps
 
@@ -104,7 +109,9 @@ def combine_time_bins(trial_data, n_bins, extra_time_fields=None, ref_field=None
 
 
 @utils.copy_td
-def merge_signals(trial_data, signals, out_fieldname):
+def merge_signals(
+    trial_data: pd.DataFrame, signals: list[str], out_fieldname: str
+) -> pd.DataFrame:
     """
     Merge two signals under a new name
     Parameters
@@ -134,7 +141,9 @@ def merge_signals(trial_data, signals, out_fieldname):
 
 
 @utils.copy_td
-def trial_average(trial_data: pd.DataFrame, condition, ref_field: Optional[str] = None):
+def trial_average(
+    trial_data: pd.DataFrame, condition, ref_field: Optional[str] = None
+) -> pd.DataFrame:
     """
     Trial-average signals, optionally after grouping trials by some conditions
 
@@ -205,7 +214,9 @@ def trial_average(trial_data: pd.DataFrame, condition, ref_field: Optional[str] 
 
 
 @utils.copy_td
-def subtract_cross_condition_mean(trial_data, cond_idx=None, ref_field=None):
+def subtract_cross_condition_mean(
+    trial_data: pd.DataFrame, cond_idx: Sequence[int] = None, ref_field: str = None
+) -> pd.DataFrame:
     """
     Find mean across all trials for each time point and subtract it from each trial.
 
@@ -230,7 +241,7 @@ def subtract_cross_condition_mean(trial_data, cond_idx=None, ref_field=None):
     for col in time_fields:
         assert (
             len(set([arr.shape for arr in trial_data[col]])) == 1
-        ), f"Trials should have the same time coordinates in order to average."
+        ), "Trials should have the same time coordinates in order to average."
 
     for col in time_fields:
         mean_act = np.mean(trial_data.loc[cond_idx, col], axis=0)
@@ -239,7 +250,9 @@ def subtract_cross_condition_mean(trial_data, cond_idx=None, ref_field=None):
 
 
 @utils.copy_td
-def select_trials(trial_data, query, reset_index=True):
+def select_trials(
+    trial_data: pd.DataFrame, query, reset_index: bool = True
+) -> pd.DataFrame:
     """
     Select trials based on some criteria
 
@@ -287,7 +300,11 @@ def select_trials(trial_data, query, reset_index=True):
         return trial_data.loc[trials_to_keep, :]
 
 
-def keep_common_trials(df_a, df_b, join_field="trial_id"):
+def keep_common_trials(
+    df_a: pd.DataFrame,
+    df_b: pd.DataFrame,
+    join_field: str = "trial_id",
+) -> tuple[pd.DataFrame, pd.DataFrame]:
     """
     Keep only trials with ID that are found in both data sets
 

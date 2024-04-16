@@ -1,10 +1,12 @@
+from typing import Sequence, Union
+
 import numpy as np
+import pandas as pd
 
-from . import utils
-from . import extract_signals
+from . import extract_signals, utils
 
 
-def get_range(arr, axis=None):
+def get_range(arr: np.ndarray, axis: int = None) -> Union[float, np.ndarray[float]]:
     """
     Difference between the highest and the lowest value
 
@@ -18,13 +20,13 @@ def get_range(arr, axis=None):
 
     Returns
     -------
-    if axis=None, a single integer
+    if axis=None, a single number
     if axis is not None, an np.array containing the ranges along the given axis
     """
     return np.max(arr, axis=axis) - np.min(arr, axis=axis)
 
 
-def center(arr):
+def center(arr: np.ndarray) -> np.ndarray:
     """
     Center array by removing the mean across time
 
@@ -42,7 +44,11 @@ def center(arr):
 
 
 @utils.copy_td
-def center_signal(trial_data, signals, train_trials=None):
+def center_signal(
+    trial_data: pd.DataFrame,
+    signals: Union[str, Sequence[str]],
+    train_trials: Sequence[int] = None,
+) -> pd.DataFrame:
     """
     Center signal by removing the mean across time
 
@@ -73,7 +79,7 @@ def center_signal(trial_data, signals, train_trials=None):
     return trial_data
 
 
-def z_score(arr):
+def z_score(arr: np.ndarray) -> np.ndarray:
     """
     z-score function by removing the mean and dividing by the standard deviation (across time)
 
@@ -91,7 +97,11 @@ def z_score(arr):
 
 
 @utils.copy_td
-def z_score_signal(trial_data, signals, train_trials=None):
+def z_score_signal(
+    trial_data: pd.DataFrame,
+    signals: Union[str, Sequence[str]],
+    train_trials: Sequence[int] = None,
+) -> pd.DataFrame:
     """
     z-score signal by removing the mean across time
     and dividing by the standard deviation
@@ -125,7 +135,11 @@ def z_score_signal(trial_data, signals, train_trials=None):
 
 
 @utils.copy_td
-def sqrt_transform_signal(trial_data, signals, train_trials=None):
+def sqrt_transform_signal(
+    trial_data: pd.DataFrame,
+    signals: Union[str, Sequence[str]],
+    train_trials: Sequence[int] = None,
+) -> pd.DataFrame:
     """
     square-root transform signal
 
@@ -163,7 +177,11 @@ def sqrt_transform_signal(trial_data, signals, train_trials=None):
 
 
 @utils.copy_td
-def zero_normalize_signal(trial_data, signals, train_trials=None):
+def zero_normalize_signal(
+    trial_data: pd.DataFrame,
+    signals: Union[str, Sequence[str]],
+    train_trials: Sequence[int] = None,
+) -> pd.DataFrame:
     """
     Zero-normalize signal to 0-1 by removing the minimum, then dividing by the range
 
@@ -196,7 +214,11 @@ def zero_normalize_signal(trial_data, signals, train_trials=None):
 
 
 @utils.copy_td
-def center_normalize_signal(trial_data, signals, train_trials=None):
+def center_normalize_signal(
+    trial_data: pd.DataFrame,
+    signals: Union[str, Sequence[str]],
+    train_trials: Sequence[int] = None,
+) -> pd.DataFrame:
     """
     Center-normalize signal by removing the mean, then dividing by the range
 
@@ -229,7 +251,12 @@ def center_normalize_signal(trial_data, signals, train_trials=None):
 
 
 @utils.copy_td
-def soft_normalize_signal(trial_data, signals, train_trials=None, alpha=5):
+def soft_normalize_signal(
+    trial_data: pd.DataFrame,
+    signals: Union[str, Sequence[str]],
+    train_trials: Sequence[int] = None,
+    alpha: float = 5.0,
+) -> pd.DataFrame:
     """
     Soft normalize signal a la Churchland papers
 
@@ -263,7 +290,13 @@ def soft_normalize_signal(trial_data, signals, train_trials=None, alpha=5):
 
 
 @utils.copy_td
-def transform_signal(trial_data, signals, transformations, train_trials=None, **kwargs):
+def transform_signal(
+    trial_data: pd.DataFrame,
+    signals: Union[str, Sequence[str]],
+    transformations: Union[str, Sequence[str]],
+    train_trials: Sequence[int] = None,
+    **kwargs,
+) -> pd.DataFrame:
     """
     Apply transformation(s) to signal
 
@@ -303,7 +336,6 @@ def transform_signal(trial_data, signals, transformations, train_trials=None, **
         "sqrt": sqrt_transform_signal,
         "z_score": z_score_signal,
         "z-score": z_score_signal,
-        "zero_normalize": zero_normalize_signal,
         "soft_normalize": soft_normalize_signal,
     }
 

@@ -1,12 +1,18 @@
 import numpy as np
+import pandas as pd
 
-from . import smoothing
-from . import utils
-from . import extract_signals
+from . import extract_signals, smoothing, utils
 
 
 @utils.copy_td
-def add_firing_rates(trial_data, method, std=None, hw=None, win=None, backend="convolve1d"):
+def add_firing_rates(
+    trial_data: pd.DataFrame,
+    method: str,
+    std: float = None,
+    hw: float = None,
+    win: float = None,
+    backend: str = "convolve1d",
+) -> pd.DataFrame:
     """
     Add firing rate fields calculated from spikes fields
 
@@ -70,7 +76,9 @@ def add_firing_rates(trial_data, method, std=None, hw=None, win=None, backend="c
     return trial_data
 
 
-def get_average_firing_rates(trial_data, signal, divide_by_bin_size=None):
+def get_average_firing_rates(
+    trial_data: pd.DataFrame, signal: str, divide_by_bin_size: bool = None
+) -> np.ndarray:
     """
     Calculate average firing rates of neurons across all trials
 
@@ -108,7 +116,7 @@ def get_average_firing_rates(trial_data, signal, divide_by_bin_size=None):
     else:
         if divide_by_bin_size is None:
             raise ValueError(
-                f"Please specify divide_by_bin_size. Could not determine it automatically."
+                "Please specify divide_by_bin_size. Could not determine it automatically."
             )
 
     if divide_by_bin_size:
@@ -122,8 +130,12 @@ def get_average_firing_rates(trial_data, signal, divide_by_bin_size=None):
 
 @utils.copy_td
 def remove_low_firing_neurons(
-    trial_data, signal, threshold, divide_by_bin_size=None, verbose=False
-):
+    trial_data: pd.DataFrame,
+    signal: str,
+    threshold: float,
+    divide_by_bin_size: bool = None,
+    verbose: bool = False,
+) -> pd.DataFrame:
     """
     Remove neurons from signal whose average firing rate
     across all trials is lower than a threshold

@@ -1,12 +1,14 @@
-import numpy as np
+from typing import Iterable
 
+import numpy as np
+import pandas as pd
 import scipy.signal as scs
 from scipy.ndimage import convolve1d
 
 from . import utils
 
 
-def norm_gauss_window(bin_length, std):
+def norm_gauss_window(bin_length: float, std: float) -> np.ndarray:
     """
     Gaussian window with its mass normalized to 1
 
@@ -29,14 +31,21 @@ def norm_gauss_window(bin_length, std):
     return win / np.sum(win)
 
 
-def hw_to_std(hw):
+def hw_to_std(hw: float) -> float:
     """
     Convert half-width to standard deviation for a Gaussian window.
     """
     return hw / (2 * np.sqrt(2 * np.log(2)))
 
 
-def smooth_data(mat, dt=None, std=None, hw=None, win=None, backend="convolve1d"):
+def smooth_data(
+    mat: np.ndarray,
+    dt: float = None,
+    std: float = None,
+    hw: float = None,
+    win: np.ndarray = None,
+    backend: str = "convolve1d",
+) -> np.ndarray:
     """
     Smooth a 1D array or every column of a 2D array
 
@@ -91,12 +100,18 @@ def smooth_data(mat, dt=None, std=None, hw=None, win=None, backend="convolve1d")
         raise ValueError("backend has to either 'convolve1d' or 'convolve'")
 
 
-def only_one_is_not_None(args):
+def only_one_is_not_None(args: Iterable) -> bool:
     return sum([arg is not None for arg in args]) == 1
 
 
 @utils.copy_td
-def smooth_signals(trial_data, signals, std=None, hw=None, backend="convolve1d"):
+def smooth_signals(
+    trial_data: pd.DataFrame,
+    signals: list[str],
+    std: float = None,
+    hw: float = None,
+    backend: str = "convolve1d",
+) -> pd.DataFrame:
     """
     Smooth signal(s)
 

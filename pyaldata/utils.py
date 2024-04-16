@@ -35,7 +35,7 @@ def copy_td(func):
     return wrapper
 
 
-def remove_suffix(text, suffix):
+def remove_suffix(text: str, suffix: str) -> str:
     """
     Remove suffix from the end of text
 
@@ -91,7 +91,7 @@ def get_time_varying_fields(
     ref_field: str = None,
     strict_criterion: bool = True,
     warn_if_suspicious: bool = True,
-):
+) -> list[str]:
     """
     Identify time-varying fields in the dataset
 
@@ -167,7 +167,7 @@ def get_time_varying_fields(
     return time_fields
 
 
-def get_array_fields(trial_data):
+def get_array_fields(trial_data: pd.DataFrame) -> list[str]:
     """
     Get the names of columns that contain numpy arrays
 
@@ -187,7 +187,7 @@ def get_array_fields(trial_data):
     ]
 
 
-def get_string_fields(trial_data):
+def get_string_fields(trial_data: pd.DataFrame) -> list[str]:
     """
     Get the names of columns that contain string data
 
@@ -207,7 +207,7 @@ def get_string_fields(trial_data):
     ]
 
 
-def get_trial_length(trial, ref_field=None):
+def get_trial_length(trial: pd.Series, ref_field: str = None) -> int:
     """
     Get the number of time points in the trial
 

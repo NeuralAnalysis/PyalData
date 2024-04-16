@@ -1,9 +1,11 @@
+from typing import Sequence
+
 import pandas as pd
 
 from . import utils
 
 
-def concat_TDs(frames, re_index=True):
+def concat_TDs(frames: Sequence[pd.DataFrame], re_index: bool = True):
     """
     Concatenate trial_data structures.
     Supports if structs don't have the same fields, missing values are filled with nan.
@@ -28,7 +30,7 @@ def concat_TDs(frames, re_index=True):
 
 
 @utils.copy_td
-def rename_fields(trial_data, fields):
+def rename_fields(trial_data: pd.DataFrame, fields: dict[str, str]) -> pd.DataFrame:
     """
     Rename field inside trial data
 
@@ -54,7 +56,7 @@ def rename_fields(trial_data, fields):
 
 
 @utils.copy_td
-def copy_fields(trial_data, fields):
+def copy_fields(trial_data: pd.DataFrame, fields: dict[str, str]):
     """
     Copy and rename inside trial data
 

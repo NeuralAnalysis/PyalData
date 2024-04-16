@@ -1,10 +1,11 @@
-from . import utils
-
 import numpy as np
+import pandas as pd
+
+from . import utils
 
 
 @utils.copy_td
-def backshift_idx_fields(trial_data):
+def backshift_idx_fields(trial_data: pd.DataFrame):
     """
     Adjust index fields from 1-based to 0-based indexing
 
@@ -27,7 +28,7 @@ def backshift_idx_fields(trial_data):
 
 
 @utils.copy_td
-def clean_0d_array_fields(df):
+def clean_0d_array_fields(df: pd.DataFrame):
     """
     Loading v7.3 MAT files, sometimes scalers are stored as 0-dimensional arrays for some reason.
     This converts those back to scalars.
@@ -50,7 +51,7 @@ def clean_0d_array_fields(df):
 
 
 @utils.copy_td
-def clean_integer_fields(df):
+def clean_integer_fields(df: pd.DataFrame):
     """
     Modify fields that store integers as floats to store them as integers instead.
 
