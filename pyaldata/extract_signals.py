@@ -1,10 +1,17 @@
+from typing import Sequence, Union
+
 import numpy as np
+import pandas as pd
 
-from .utils import get_trial_length
 from .array_utils import split_array
+from .utils import get_trial_length
 
 
-def concat_trials(trial_data, signal, trial_indices=None):
+def concat_trials(
+    trial_data: pd.DataFrame,
+    signal: str,
+    trial_indices: Sequence[int] = None,
+):
     """
     Concatenate signal from different trials in time
 
@@ -28,7 +35,7 @@ def concat_trials(trial_data, signal, trial_indices=None):
         return np.concatenate(trial_data.loc[trial_indices, signal].values, axis=0)
 
 
-def reverse_concat(X, df):
+def reverse_concat(X: np.ndarray, df: pd.DataFrame) -> list[np.ndarray]:
     """
     Split a concatenated signal X into chunks corresponding to each trial of df.
     ~ reverse concat_trials
@@ -50,7 +57,11 @@ def reverse_concat(X, df):
     return split_array(X, trial_lengths)
 
 
-def get_signals(trial_data, signals, trial_indices=None):
+def get_signals(
+    trial_data: pd.DataFrame,
+    signals: Union[str, Sequence[str]],
+    trial_indices: Sequence[int] = None,
+) -> np.ndarray:
     """
     Extract multiple signals
 
@@ -74,7 +85,11 @@ def get_signals(trial_data, signals, trial_indices=None):
     return np.column_stack([concat_trials(trial_data, s, trial_indices) for s in signals])
 
 
-def get_sig_by_trial(trial_data, signals, trial_indices=None):
+def get_sig_by_trial(
+    trial_data: pd.DataFrame,
+    signals: Union[str, Sequence[str]],
+    trial_indices: Sequence[int] = None,
+) -> np.ndarray:
     """
     Extract multiple signals and stack trials along a trial dimension
     resulting in a T x N x n_trials tensor.
@@ -108,7 +123,7 @@ def get_sig_by_trial(trial_data, signals, trial_indices=None):
     )
 
 
-def stack_time_average(trial_data, signal):
+def stack_time_average(trial_data: pd.DataFrame, signal: str) -> np.ndarray:
     """
     Average signal in time in each trial, then stack them into an
     n_trials x n_features array

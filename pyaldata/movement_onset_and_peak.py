@@ -1,12 +1,21 @@
 import warnings
+from typing import Union
 
 import numpy as np
+import pandas as pd
 from scipy.signal import find_peaks
 
 from . import signals, utils
 
 
-def get_onset_idx(s, min_ds=1.9, s_thresh=10, peak_divisor=2, method="peaks", debug=False):
+def get_onset_idx(
+    s: np.ndarray,
+    min_ds: float = 1.9,
+    s_thresh: float = 10.0,
+    peak_divisor: float = 2.0,
+    method: str = "peaks",
+    debug: bool = False,
+):
     """
     Get the index at the beginning of the uprise of the signal
 
@@ -89,13 +98,13 @@ def get_onset_idx(s, min_ds=1.9, s_thresh=10, peak_divisor=2, method="peaks", de
 
 
 def get_movement_onset(
-    trial,
-    start="idx_go_cue",
-    min_ds=1.9,
-    s_thresh=10,
-    peak_divisor=2,
-    method="peaks",
-    debug=False,
+    trial: pd.Series,
+    start: str = "idx_go_cue",
+    min_ds: float = 1.9,
+    s_thresh: float = 10.0,
+    peak_divisor: float = 2.0,
+    method: str = "peaks",
+    debug: bool = False,
 ):
     """
     Get index of movement onset in the trial
@@ -138,7 +147,7 @@ def get_movement_onset(
 
 
 @utils.copy_td
-def add_movement_onset(trial_data, **kwargs):
+def add_movement_onset(trial_data: pd.DataFrame, **kwargs) -> pd.DataFrame:
     """
     Get index of movement onset in every trial
 
@@ -166,7 +175,7 @@ def add_movement_onset(trial_data, **kwargs):
     return trial_data
 
 
-def get_peak_speed_idx(trial, start="idx_go_cue"):
+def get_peak_speed_idx(trial: pd.Series, start: Union[int, str] = "idx_go_cue") -> int:
     """
     Get the index of peak velocity in the trial
 
@@ -193,14 +202,16 @@ def get_peak_speed_idx(trial, start="idx_go_cue"):
 
 
 @utils.copy_td
-def add_peak_speed_idx(trial_data, start="idx_go_cue"):
+def add_peak_speed_idx(
+    trial_data: pd.DataFrame, start: Union[int, str] = "idx_go_cue"
+) -> pd.DataFrame:
     """
     Get the index of peak velocity in every trial and save it
     in the field "idx_peak_speed"
 
     Parameters
     ----------
-    trial : pd.Series
+    trial : pd.DataFrame
         trial to get the movement onset in
         has to have a vel_norm field
     start : int or string, default "idx_go_cue"
@@ -218,7 +229,7 @@ def add_peak_speed_idx(trial_data, start="idx_go_cue"):
     return trial_data
 
 
-def get_peak_speed(trial, start="idx_go_cue"):
+def get_peak_speed(trial: pd.Series, start: Union[int, str] = "idx_go_cue") -> float:
     """
     Get peak speed in the trial during movement.
 
@@ -244,7 +255,9 @@ def get_peak_speed(trial, start="idx_go_cue"):
 
 
 @utils.copy_td
-def add_peak_speed(trial_data, start="idx_go_cue"):
+def add_peak_speed(
+    trial_data: pd.DataFrame, start: Union[int, str] = "idx_go_cue"
+) -> pd.DataFrame:
     """
     Get the peak velocity in every trial and save it
     in the field "peak_speed"

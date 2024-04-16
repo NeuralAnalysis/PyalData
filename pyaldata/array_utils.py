@@ -1,7 +1,7 @@
 import numpy as np
 
 
-def split_array(X, lengths):
+def split_array(X: np.ndarray, lengths: list[int]):
     """
     Split an array into subarrays of given lengths along its first dimension.
     """

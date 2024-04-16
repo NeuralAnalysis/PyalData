@@ -1,8 +1,17 @@
-from . import utils
-from . import extract_signals
+from typing import Sequence
+
+import pandas as pd
+
+from . import extract_signals, utils
 
 
-def fit_dim_reduce_model(trial_data, model, signal, train_trials=None, fit_kwargs=None):
+def fit_dim_reduce_model(
+    trial_data: pd.DataFrame,
+    model,
+    signal: str,
+    train_trials: Sequence[int] = None,
+    fit_kwargs: dict = None,
+):
     """
     Fit a dimensionality reduction model to train_trials
 
@@ -39,7 +48,9 @@ def fit_dim_reduce_model(trial_data, model, signal, train_trials=None, fit_kwarg
 
 
 @utils.copy_td
-def apply_dim_reduce_model(trial_data, model, signal, out_fieldname):
+def apply_dim_reduce_model(
+    trial_data: pd.DataFrame, model, signal: str, out_fieldname: str
+) -> pd.DataFrame:
     """
     Apply a fitted dimensionality reduction model to all trials
 
@@ -66,13 +77,13 @@ def apply_dim_reduce_model(trial_data, model, signal, out_fieldname):
 
 @utils.copy_td
 def dim_reduce(
-    trial_data,
+    trial_data: pd.DataFrame,
     model,
-    signal,
-    out_fieldname,
-    train_trials=None,
-    fit_kwargs=None,
-    return_model=False,
+    signal: str,
+    out_fieldname: str,
+    train_trials: Sequence[int] = None,
+    fit_kwargs: dict = None,
+    return_model: bool = False,
 ):
     """
     Fit dimensionality reduction model and apply it to all trials

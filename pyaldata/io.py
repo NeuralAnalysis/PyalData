@@ -1,10 +1,10 @@
-from . import data_cleaning
-
 import pandas as pd
 import scipy.io
 
+from . import data_cleaning
 
-def mat2dataframe(path, shift_idx_fields, td_name=None):
+
+def mat2dataframe(path: str, shift_idx_fields: bool, td_name: str = None) -> pd.DataFrame:
     """
     Load a trial_data .mat file and turn it into a pandas DataFrame
 
