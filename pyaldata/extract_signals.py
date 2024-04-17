@@ -6,6 +6,14 @@ import pandas as pd
 from .array_utils import split_array
 from .utils import get_trial_length
 
+__all__ = [
+    "concat_trials",
+    "get_sig_by_trial",
+    "get_signals",
+    "reverse_concat",
+    "stack_time_average",
+]
+
 
 def concat_trials(
     trial_data: pd.DataFrame,

@@ -4,6 +4,16 @@ import warnings
 import numpy as np
 import pandas as pd
 
+__all__ = [
+    "copy_td",
+    "determine_ref_field",
+    "get_array_fields",
+    "get_string_fields",
+    "get_time_varying_fields",
+    "get_trial_length",
+    "remove_suffix",
+]
+
 
 def copy_td(func):
     """

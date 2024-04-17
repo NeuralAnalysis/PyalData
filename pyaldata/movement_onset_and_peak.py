@@ -7,6 +7,16 @@ from scipy.signal import find_peaks
 
 from . import signals, utils
 
+__all__ = [
+    "add_movement_onset",
+    "add_peak_speed",
+    "add_peak_speed_idx",
+    "get_movement_onset",
+    "get_onset_idx",
+    "get_peak_speed",
+    "get_peak_speed_idx",
+]
+
 
 def get_onset_idx(
     s: np.ndarray,

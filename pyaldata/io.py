@@ -3,6 +3,8 @@ import scipy.io
 
 from . import data_cleaning
 
+__all__ = ["mat2dataframe"]
+
 
 def mat2dataframe(path: str, shift_idx_fields: bool, td_name: str = None) -> pd.DataFrame:
     """

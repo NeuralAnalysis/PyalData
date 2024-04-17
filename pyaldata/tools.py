@@ -9,6 +9,16 @@ from . import integrity_checks, utils
 warnings.simplefilter("always", UserWarning)
 
 
+__all__ = [
+    "combine_time_bins",
+    "keep_common_trials",
+    "merge_signals",
+    "select_trials",
+    "subtract_cross_condition_mean",
+    "trial_average",
+]
+
+
 @utils.copy_td
 def combine_time_bins(
     trial_data: pd.DataFrame,

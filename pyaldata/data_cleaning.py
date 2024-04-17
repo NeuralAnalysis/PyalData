@@ -3,6 +3,8 @@ import pandas as pd
 
 from . import utils
 
+__all__ = ["backshift_idx_fields", "clean_0d_array_fields", "clean_integer_fields"]
+
 
 @utils.copy_td
 def backshift_idx_fields(trial_data: pd.DataFrame):

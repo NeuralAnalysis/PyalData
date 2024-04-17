@@ -3,6 +3,8 @@ import pandas as pd
 
 from . import extract_signals, smoothing, utils
 
+__all__ = ["add_firing_rates", "get_average_firing_rates", "remove_low_firing_neurons"]
+
 
 @utils.copy_td
 def add_firing_rates(

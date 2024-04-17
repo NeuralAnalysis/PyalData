@@ -9,6 +9,17 @@ from . import tools, utils
 warnings.simplefilter("always", UserWarning)
 
 
+__all__ = [
+    "extract_interval_from_signal",
+    "generate_epoch_fun",
+    "restrict_to_interval",
+    "slice_around_index",
+    "slice_around_point",
+    "slice_between_points",
+    "slice_in_trial",
+]
+
+
 @utils.copy_td
 def restrict_to_interval(
     trial_data: pd.DataFrame,
@@ -81,7 +92,7 @@ def restrict_to_interval(
     # check in which trials the indexing works properly
     kept_trials_mask = np.array(
         [
-            _slice_in_trial(trial, epoch_fun(trial), warn_per_trial)
+            slice_in_trial(trial, epoch_fun(trial), warn_per_trial)
             for (i, trial) in trial_data.iterrows()
         ]
     ).astype(bool)
@@ -288,7 +299,7 @@ def extract_interval_from_signal(
     return [trial[signal][epoch_fun(trial), ...] for (i, trial) in trial_data.iterrows()]
 
 
-def _slice_in_trial(trial: pd.Series, sl: slice, warn: bool = False) -> bool:
+def slice_in_trial(trial: pd.Series, sl: slice, warn: bool = False) -> bool:
     """
     Check if the slice is within the trial's time indices
 
