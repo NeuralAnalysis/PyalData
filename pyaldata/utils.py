@@ -163,7 +163,7 @@ def get_time_varying_fields(
             try:
                 if first_trial[col].shape[0] == T:
                     time_fields.append(col)
-            except:
+            except Exception:
                 pass
 
         # but check the rest of the trials, too
