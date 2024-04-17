@@ -1,9 +1,11 @@
+from typing import Optional
+
 import numpy as np
 import pandas as pd
 
-from typing import Optional
-
 from . import utils
+
+__all__ = ["add_gradient", "add_norm", "add_speed", "signal_dimensionality"]
 
 
 def signal_dimensionality(trial_data: pd.DataFrame, signal: str) -> int:

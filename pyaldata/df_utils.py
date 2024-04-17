@@ -4,6 +4,8 @@ import pandas as pd
 
 from . import utils
 
+__all__ = ["concat_TDs", "rename_fields", "copy_fields"]
+
 
 def concat_TDs(frames: Sequence[pd.DataFrame], re_index: bool = True):
     """

@@ -7,6 +7,8 @@ from scipy.ndimage import convolve1d
 
 from . import utils
 
+__all__ = ["hw_to_std", "norm_gauss_window", "smooth_data", "smooth_signals"]
+
 
 def norm_gauss_window(bin_length: float, std: float) -> np.ndarray:
     """
@@ -71,7 +73,7 @@ def smooth_data(
     -------
     np.array of the same size as mat
     """
-    assert only_one_is_not_None((win, hw, std))
+    assert _only_one_is_not_None((win, hw, std))
     assert (
         backend == "convolve" or backend == "convolve1d"
     ), "backend must be either convolve or convolve1d"
@@ -100,7 +102,7 @@ def smooth_data(
         raise ValueError("backend has to either 'convolve1d' or 'convolve'")
 
 
-def only_one_is_not_None(args: Iterable) -> bool:
+def _only_one_is_not_None(args: Iterable) -> bool:
     return sum([arg is not None for arg in args]) == 1
 
 

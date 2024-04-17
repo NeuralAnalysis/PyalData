@@ -1,5 +1,7 @@
 import numpy as np
 
+__all__ = ["split_array"]
+
 
 def split_array(X: np.ndarray, lengths: list[int]):
     """

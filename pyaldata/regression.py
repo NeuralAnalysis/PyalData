@@ -5,6 +5,13 @@ import pandas as pd
 
 from . import extract_signals, utils
 
+__all__ = [
+    "apply_regressor_model",
+    "expand_field_in_time",
+    "fit_regressor_model",
+    "regress",
+]
+
 
 def fit_regressor_model(
     trial_data: pd.DataFrame,

@@ -3,6 +3,8 @@ import pandas as pd
 
 from . import utils
 
+__all__ = ["backshift_idx_fields", "clean_0d_array_fields", "clean_integer_fields"]
+
 
 @utils.copy_td
 def backshift_idx_fields(trial_data: pd.DataFrame):
@@ -68,7 +70,7 @@ def clean_integer_fields(df: pd.DataFrame):
         if isinstance(df[field].values[0], np.ndarray):
             try:
                 int_arrays = [np.int32(arr) for arr in df[field]]
-            except:
+            except Exception:
                 print(f"array field {field} could not be converted to int.")
             else:
                 if all(
@@ -82,7 +84,7 @@ def clean_integer_fields(df: pd.DataFrame):
             if not isinstance(df[field].values[0], str):
                 try:
                     int_version = np.int32(df[field])
-                except:
+                except Exception:
                     print(f"field {field} could not be converted to int.")
                 else:
                     if np.allclose(int_version, df[field]):

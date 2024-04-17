@@ -4,6 +4,8 @@ import pandas as pd
 
 from . import extract_signals, utils
 
+__all__ = ["fit_dim_reduce_model", "apply_dim_reduce_model", "dim_reduce"]
+
 
 def fit_dim_reduce_model(
     trial_data: pd.DataFrame,
