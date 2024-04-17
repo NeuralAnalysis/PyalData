@@ -25,3 +25,11 @@ line_length = 92
 
 [tool.ruff]
 line-length = 92
+
+[tool.ruff.lint]
+extend-select = ["I"]
+
+[tool.isort]
+multi_line_output = 3
+line_length = 92
+include_trailing_comma = true
