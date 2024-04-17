@@ -36,7 +36,7 @@ def read_cmp(file_path):
     # Open file, remove comments and remove other formatting we don't need
     with open(file_path) as f:
         temp = [line for line in f if not line.startswith("//")]
-    clean_lsts = [remove_cmp_formatting(l) for l in temp[1:]]
+    clean_lsts = [remove_cmp_formatting(line) for line in temp[1:]]
     df = pd.DataFrame(
         clean_lsts,
         columns=[
