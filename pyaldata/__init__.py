@@ -71,5 +71,6 @@ from .utils import (
     get_string_fields,
     get_time_varying_fields,
     get_trial_length,
+    get_trial_lengths,
     remove_suffix,
 )
