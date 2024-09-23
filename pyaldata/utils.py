@@ -1,5 +1,6 @@
 import functools
 import warnings
+from typing import Union
 
 import numpy as np
 import pandas as pd
@@ -11,6 +12,7 @@ __all__ = [
     "get_string_fields",
     "get_time_varying_fields",
     "get_trial_length",
+    "get_trial_lengths",
     "remove_suffix",
 ]
 
@@ -217,7 +219,7 @@ def get_string_fields(trial_data: pd.DataFrame) -> list[str]:
     ]
 
 
-def get_trial_length(trial: pd.Series, ref_field: str = None) -> int:
+def _get_trial_length_trial(trial: pd.Series, ref_field: str = None) -> int:
     """
     Get the number of time points in the trial
 
@@ -249,3 +251,61 @@ def get_trial_length(trial: pd.Series, ref_field: str = None) -> int:
         ref_field = spike_rate_fields[0]
 
     return np.size(trial[ref_field], axis=0)
+
+
+def get_trial_length(
+    trial_or_df: Union[pd.Series, pd.DataFrame], ref_field: str = None
+) -> int:
+    """
+    Get the number of time points in a trial, or the number of timepoints in a dataframe
+    where all trials are the same length.
+
+    Parameters
+    ----------
+    trial_or_df :
+        Trial or dataframe to check
+    ref_field : str, optional
+        time-varying field to use for identifying the length
+        if not given, the first field that ends with "spikes" is used
+
+    Returns
+    -------
+    length : int
+
+    Raises
+    ------
+    ValueError
+        If not all the trials in the dataframe have the same length.
+    TypeError
+        If `trial_or_df` is not a pandas Series or DataFrame.
+    """
+    if isinstance(trial_or_df, pd.Series):
+        return _get_trial_length_trial(trial_or_df, ref_field)
+    elif isinstance(trial_or_df, pd.DataFrame):
+        unique_trial_lengths = np.unique(get_trial_lengths(trial_or_df, ref_field))
+
+        if len(unique_trial_lengths) != 1:
+            raise ValueError("All trials must have the same length.")
+
+        return unique_trial_lengths[0]
+    else:
+        raise TypeError("trial_or_df must be a pandas Series or DataFrame.")
+
+
+def get_trial_lengths(trial_data: pd.DataFrame, ref_field: str = None) -> np.ndarray:
+    """
+    Get the number of time points in all trials.
+
+    Parameters
+    ----------
+    trial_data : pd.DataFrame
+        DataFrame to check.
+    ref_field : str, optional
+        time-varying field to use for identifying the length
+        if not given, the first field that ends with "spikes" is used
+
+    Returns
+    -------
+    numpy array with the length of each trial
+    """
+    return trial_data.apply(lambda trial: get_trial_length(trial, ref_field), axis=1).values
