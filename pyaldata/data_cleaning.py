@@ -30,7 +30,7 @@ def backshift_idx_fields(trial_data: pd.DataFrame):
 
 
 @utils.copy_td
-def clean_0d_array_fields(df: pd.DataFrame):
+def clean_0d_array_fields(df: pd.DataFrame) -> pd.DataFrame:
     """
     Loading v7.3 MAT files, sometimes scalers are stored as 0-dimensional arrays for some reason.
     This converts those back to scalars.
@@ -45,7 +45,7 @@ def clean_0d_array_fields(df: pd.DataFrame):
     a copy of df with the relevant fields changed
     """
     for c in df.columns:
-        if isinstance(df[c].values[0], np.ndarray):
+        if all(isinstance(el, np.ndarray) for el in df[c].values):
             if all([arr.ndim == 0 for arr in df[c]]):
                 df[c] = [arr.item() for arr in df[c]]
 
