@@ -38,7 +38,7 @@ def test_get_trial_lengths_random_lengths():
     trial_lengths = np.random.randint(0, T, size=N)
 
     data = {}
-    data["pmd_spikes"] = [np.random.normal(size=(l, 100)) for l in trial_lengths]
+    data["pmd_spikes"] = [np.random.normal(size=(length, 100)) for length in trial_lengths]
     df = pd.DataFrame(data)
 
     assert np.all(get_trial_lengths(df) == trial_lengths)
@@ -54,7 +54,7 @@ def test_get_trial_length_df_different_lengths():
     trial_lengths = np.random.randint(0, T, size=N)
 
     data = {}
-    data["pmd_spikes"] = [np.random.normal(size=(l, 100)) for l in trial_lengths]
+    data["pmd_spikes"] = [np.random.normal(size=(length, 100)) for length in trial_lengths]
     df = pd.DataFrame(data)
 
     with pytest.raises(ValueError, match="All trials must have the same length."):
