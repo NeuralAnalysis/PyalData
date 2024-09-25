@@ -29,7 +29,7 @@ def norm_gauss_window(bin_length: float, std: float) -> np.ndarray:
             length: 10*std/bin_length
             mass normalized to 1
     """
-    win = scs.gaussian(int(10 * std / bin_length), std / bin_length)
+    win = scs.windows.gaussian(int(10 * std / bin_length), std / bin_length)
     return win / np.sum(win)
 
 
