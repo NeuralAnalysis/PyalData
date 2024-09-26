@@ -86,7 +86,7 @@ def combine_time_bins(
         arr = arr[:T, :]
         arr = arr.reshape(int(T / n_bins), n_bins, N)
 
-        return red_fun(arr, axis=1).squeeze()
+        return red_fun(arr, axis=1).reshape(-1, N)
 
     # start with spike fields
     for col in spike_fields:
